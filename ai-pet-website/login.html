@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in to Petto</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --orange:  #F17720;
+      --navy:    #1a1b2e;
+      --navy-lt: #2d2e4e;
+      --text:    #e8e8f0;
+      --text-dim:#a0a0c0;
+      --font:    'Inter', system-ui, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      font-family: var(--font);
+      background: var(--navy);
+      color: var(--text);
+    }
+
+    /* ---------- layout ---------- */
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: var(--navy-lt);
+      border-radius: 20px;
+      padding: 40px 36px 36px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    /* ---------- header ---------- */
+    .logo { font-size: 48px; text-align: center; line-height: 1; margin-bottom: 10px; }
+    .brand {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+    }
+    .tagline {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 13px;
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    /* ---------- tabs ---------- */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 24px;
+    }
+    .tab {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tab.active {
+      background: var(--navy);
+      color: var(--text);
+    }
+
+    /* ---------- form ---------- */
+    .field { margin-bottom: 14px; }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      letter-spacing: 0.3px;
+    }
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(255,255,255,0.10);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus { border-color: var(--orange); }
+    input::placeholder { color: rgba(255,255,255,0.25); }
+
+    /* ---------- buttons ---------- */
+    .btn-primary {
+      width: 100%;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 700;
+      padding: 12px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      margin-top: 4px;
+    }
+    .btn-primary:hover   { opacity: 0.9; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 16px 0;
+      color: rgba(255,255,255,0.2);
+      font-size: 12px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.10);
+    }
+
+    .btn-google {
+      width: 100%;
+      background: rgba(255,255,255,0.07);
+      color: var(--text);
+      border: 1.5px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s;
+    }
+    .btn-google:hover { background: rgba(255,255,255,0.11); }
+
+    /* ---------- messages ---------- */
+    .msg {
+      margin-top: 14px;
+      font-size: 13px;
+      text-align: center;
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: none;
+    }
+    .msg.error   { display: block; background: rgba(255,80,80,0.15);  color: #ff8080; }
+    .msg.success { display: block; background: rgba(80,200,120,0.15); color: #80e0a0; }
+
+    /* ---------- footer ---------- */
+    .card-footer {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    .card-footer a { color: var(--orange); }
+
+    /* ---------- panel visibility ---------- */
+    .panel { display: none; }
+    .panel.active { display: block; }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="card">
+    <div class="logo">🐱</div>
+    <div class="brand">Petto</div>
+    <p class="tagline">Your AI desktop companion</p>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="signin" onclick="switchTab('signin')">Sign In</button>
+      <button class="tab"        data-tab="signup" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+
+    <!-- Sign In panel -->
+    <div class="panel active" id="panel-signin">
+      <div class="field">
+        <label for="si-email">Email</label>
+        <input type="email" id="si-email" placeholder="you@example.com" autocomplete="email" />
+      </div>
+      <div class="field">
+        <label for="si-password">Password</label>
+        <input type="password" id="si-password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <button class="btn-primary" id="btn-signin" onclick="signIn()">Sign In</button>
+
+      <div class="divider">or</div>
+      <button class="btn-google" onclick="signInGoogle()">
+        <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M43.6 20.5H42V20H24v8h11.3C33.6 32.8 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.4 6.4 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z" fill="#FFC107"/>
+          <path d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7C34.4 6.4 29.5 4 24 4c-7.7 0-14.3 4.4-17.7 10.7z" fill="#FF3D00"/>
+          <path d="M24 44c5.3 0 10.1-2 13.7-5.2l-6.3-5.3C29.4 35.4 26.8 36 24 36c-5.2 0-9.6-3.2-11.3-7.8L6 33.3C9.4 39.7 16.1 44 24 44z" fill="#4CAF50"/>
+          <path d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.5l6.3 5.3C37.2 38.6 44 33 44 24c0-1.2-.1-2.3-.4-3.5z" fill="#1976D2"/>
+        </svg>
+        Continue with Google
+      </button>
+
+      <div class="msg" id="msg-signin"></div>
+    </div>
+
+    <!-- Sign Up panel -->
+    <div class="panel" id="panel-signup">
+      <div class="field">
+        <label for="su-email">Email</label>
+        <input type="email" id="su-email" placeholder="you@example.com" autocomplete="email" />
+      </div>
+      <div class="field">
+        <label for="su-password">Password</label>
+        <input type="password" id="su-password" placeholder="Min 6 characters" autocomplete="new-password" />
+      </div>
+      <button class="btn-primary" id="btn-signup" onclick="signUp()">Create Account</button>
+
+      <div class="divider">or</div>
+      <button class="btn-google" onclick="signInGoogle()">
+        <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M43.6 20.5H42V20H24v8h11.3C33.6 32.8 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.4 6.4 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z" fill="#FFC107"/>
+          <path d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7C34.4 6.4 29.5 4 24 4c-7.7 0-14.3 4.4-17.7 10.7z" fill="#FF3D00"/>
+          <path d="M24 44c5.3 0 10.1-2 13.7-5.2l-6.3-5.3C29.4 35.4 26.8 36 24 36c-5.2 0-9.6-3.2-11.3-7.8L6 33.3C9.4 39.7 16.1 44 24 44z" fill="#4CAF50"/>
+          <path d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.5l6.3 5.3C37.2 38.6 44 33 44 24c0-1.2-.1-2.3-.4-3.5z" fill="#1976D2"/>
+        </svg>
+        Continue with Google
+      </button>
+
+      <div class="msg" id="msg-signup"></div>
+    </div>
+
+    <div class="card-footer">
+      By signing in you agree to Petto's
+      <a href="https://dvntonway.github.io/ai-desktop-pet/#pricing">Terms</a>.
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Read config from URL params (injected by Electron auth.js) ──────────
+  const params     = new URLSearchParams(location.search);
+  const REDIRECT   = params.get('redirect_to') || 'petto://auth/callback';
+  const SUPA_URL   = params.get('supabase_url');
+  const ANON_KEY   = params.get('anon_key');
+
+  if (!SUPA_URL || !ANON_KEY) {
+    document.body.innerHTML = '<div style="color:#ff8080;font-family:sans-serif;padding:40px;text-align:center">Missing Supabase config. Please open this page from Petto.</div>';
+  }
+
+  // ── Tab switching ────────────────────────────────────────────────────────
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.tab === tab)
+    );
+    document.querySelectorAll('.panel').forEach(p =>
+      p.classList.toggle('active', p.id === `panel-${tab}`)
+    );
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  function showMsg(id, text, type) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className   = `msg ${type}`;
+  }
+
+  function setLoading(btnId, loading) {
+    document.getElementById(btnId).disabled = loading;
+    document.getElementById(btnId).textContent = loading ? 'Please wait…' : btnId === 'btn-signin' ? 'Sign In' : 'Create Account';
+  }
+
+  // ── Redirect with tokens ─────────────────────────────────────────────────
+  function redirectWithSession(data) {
+    const { access_token, refresh_token, expires_in } = data;
+    const hash = `access_token=${access_token}&refresh_token=${refresh_token}&expires_in=${expires_in ?? 3600}&token_type=bearer`;
+    window.location.href = `${REDIRECT}#${hash}`;
+  }
+
+  // ── Sign In ──────────────────────────────────────────────────────────────
+  async function signIn() {
+    const email    = document.getElementById('si-email').value.trim();
+    const password = document.getElementById('si-password').value;
+    if (!email || !password) return showMsg('msg-signin', 'Please fill in all fields.', 'error');
+
+    setLoading('btn-signin', true);
+    try {
+      const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': ANON_KEY },
+        body:    JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error_description || data.msg || 'Sign in failed');
+      redirectWithSession(data);
+    } catch (e) {
+      showMsg('msg-signin', e.message, 'error');
+      setLoading('btn-signin', false);
+    }
+  }
+
+  // ── Sign Up ──────────────────────────────────────────────────────────────
+  async function signUp() {
+    const email    = document.getElementById('su-email').value.trim();
+    const password = document.getElementById('su-password').value;
+    if (!email || !password) return showMsg('msg-signup', 'Please fill in all fields.', 'error');
+    if (password.length < 6)  return showMsg('msg-signup', 'Password must be at least 6 characters.', 'error');
+
+    setLoading('btn-signup', true);
+    try {
+      const res = await fetch(`${SUPA_URL}/auth/v1/signup`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': ANON_KEY },
+        body:    JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error_description || data.msg || 'Sign up failed');
+
+      if (data.access_token) {
+        // Auto-confirmed (email confirmations disabled)
+        redirectWithSession(data);
+      } else {
+        // Email confirmation required
+        showMsg('msg-signup', 'Check your inbox to confirm your email, then sign in.', 'success');
+        setLoading('btn-signup', false);
+      }
+    } catch (e) {
+      showMsg('msg-signup', e.message, 'error');
+      setLoading('btn-signup', false);
+    }
+  }
+
+  // ── Google OAuth ─────────────────────────────────────────────────────────
+  function signInGoogle() {
+    const authUrl = `${SUPA_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(REDIRECT)}`;
+    window.location.href = authUrl;
+  }
+
+  // ── Enter key support ────────────────────────────────────────────────────
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const active = document.querySelector('.panel.active');
+    if (active?.id === 'panel-signin') signIn();
+    if (active?.id === 'panel-signup') signUp();
+  });
+</script>
+</body>
+</html>

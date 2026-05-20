@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Opening Petto…</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #1a1b2e;
+      color: #e8e8f0;
+    }
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+    .logo { font-size: 56px; line-height: 1; margin-bottom: 16px; }
+    h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px; }
+    .sub { color: #a0a0c0; font-size: 14px; line-height: 1.6; margin-bottom: 32px; }
+
+    .btn {
+      display: inline-block;
+      background: #F17720;
+      color: #fff;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 13px 28px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.88; }
+
+    .error { color: #ff8080; font-size: 13px; margin-top: 20px; display: none; }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid rgba(255,255,255,0.15);
+      border-top-color: #F17720;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 24px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="logo">🐱</div>
+  <h1 id="heading">Opening Petto…</h1>
+  <p class="sub" id="sub">Hang tight — you're being redirected back to the app.</p>
+  <div class="spinner" id="spinner"></div>
+  <a class="btn" id="btn-open" style="display:none">Open Petto</a>
+  <p class="error" id="err"></p>
+</div>
+
+<script>
+  // ── Parse tokens from the URL hash ────────────────────────────────────────
+  // Supabase implicit flow puts tokens in the fragment: ...callback.html#access_token=...
+  const hash   = location.hash.slice(1);   // drop the leading '#'
+  const params = new URLSearchParams(hash);
+
+  const accessToken  = params.get('access_token');
+  const refreshToken = params.get('refresh_token');
+  const expiresIn    = params.get('expires_in') || '3600';
+
+  function fail(msg) {
+    document.getElementById('spinner').style.display  = 'none';
+    document.getElementById('heading').textContent    = 'Something went wrong';
+    document.getElementById('sub').textContent        = 'You can close this tab and try signing in again.';
+    const err = document.getElementById('err');
+    err.textContent = msg;
+    err.style.display = 'block';
+  }
+
+  if (!accessToken || !refreshToken) {
+    fail('No session tokens found in the callback URL.');
+  } else {
+    // Build the petto:// URL using *query params* (not hash).
+    // Hash fragments are stripped by some browsers before invoking a protocol
+    // handler, but query params survive intact and are forwarded to the Electron
+    // process via argv.
+    const pettoUrl = 'petto://auth/callback'
+      + '?access_token='  + encodeURIComponent(accessToken)
+      + '&refresh_token=' + encodeURIComponent(refreshToken)
+      + '&expires_in='    + encodeURIComponent(expiresIn);
+
+    // Wire up the manual button first so it's ready if auto-redirect is slow
+    const btn = document.getElementById('btn-open');
+    btn.href = pettoUrl;
+
+    // Auto-redirect after a short delay (lets the page render first)
+    setTimeout(() => {
+      window.location.href = pettoUrl;
+
+      // If the browser couldn't open the protocol, show the manual button after 2 s
+      setTimeout(() => {
+        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('heading').textContent   = 'Click below to open Petto';
+        document.getElementById('sub').textContent       = 'Your browser may have blocked the automatic redirect.';
+        btn.style.display = 'inline-block';
+      }, 2000);
+    }, 300);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Petto — Your AI Pet That Judges Your Screen</title>
+  <meta name="description"
+    content="Petto is an AI desktop pet that watches your screen and reacts in real time. Productivity guilt, coding cheers, procrastination roasting — all in one adorable app." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- Floating scattered pets (decorative) -->
+  <img src="images/pet_cat.png" class="float-pet fp-1" alt="floating cat" />
+  <img src="images/pet_monkey.png" class="float-pet fp-2" alt="floating monkey" />
+  <img src="images/pet_dog.png" class="float-pet fp-3" alt="floating dog" />
+  <img src="images/pet_barbie.png" class="float-pet fp-4" alt="floating barbie" />
+  <img src="images/pet_mario.png" class="float-pet fp-5" alt="floating mario" />
+
+  <!-- ========== NAVBAR ========== -->
+  <nav id="navbar">
+    <div class="nav-inner">
+      <a href="#" class="logo" id="nav-logo">
+        <span class="logo-dot">●</span> Petto
+      </a>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how-it-works">How it Works</a></li>
+        <li><a href="#gallery">Pets</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+      </ul>
+      <a href="https://github.com/dvntonway/ai-desktop-pet/releases/download/v0.1.1/Petto.Setup.0.1.1.exe"
+        class="btn-primary" id="nav-cta" download="Petto.Setup.0.1.1.exe" target="_blank">Get Petto Free</a>
+    </div>
+  </nav>
+
+  <!-- ========== HERO ========== -->
+  <section class="hero" id="hero">
+    <div class="hero-content">
+      <span class="hero-badge">✦ Tamagotchi meets AI</span>
+      <h1 class="hero-title">Your AI pet that<br /><em>judges</em> your screen.</h1>
+      <p class="hero-sub">Petto watches what you do, reacts in real time, and keeps you company — or calls you out.</p>
+      <div class="hero-actions">
+        <a href="https://github.com/dvntonway/ai-desktop-pet/releases/download/v0.1.1/Petto.Setup.0.1.1.exe"
+          class="btn-primary btn-lg" id="hero-cta" download="Petto.Setup.0.1.0.exe" target="_blank">Download Free →</a>
+        <a href="#how-it-works" class="btn-ghost" id="hero-learn">See how it works</a>
+      </div>
+      <p class="hero-note">🍎 macOS & Windows · Free forever · No sign-up</p>
+    </div>
+    <div class="hero-pet">
+      <div class="hero-bubble">😤 Still scrolling Twitter?<br />At 2pm on a Tuesday?!</div>
+      <div class="hero-pet-wrap">
+        <img src="images/pet_cat.png" alt="Petto cat judging you" class="hero-pet-img" id="hero-pet-img" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== HOW IT WORKS ========== -->
+  <section class="section" id="how-it-works">
+    <div class="section-monkey-peek">
+      <img src="images/pet_monkey.png" alt="monkey peeking" />
+    </div>
+    <div class="container">
+      <span class="section-label">How it works</span>
+      <h2 class="section-title">Three steps to a life<br />with a tiny AI critic.</h2>
+      <div class="steps-grid">
+        <div class="step-card" id="step-1">
+          <div class="step-num">01</div>
+          <div class="step-icon">👁️</div>
+          <h3>Petto watches your screen</h3>
+          <p>Petto sits in your taskbar, silently observing your every digital move. Nothing escapes those big cartoon
+            eyes.</p>
+        </div>
+        <div class="step-card" id="step-2">
+          <div class="step-num">02</div>
+          <div class="step-icon">🧠</div>
+          <h3>AI judges what you're doing</h3>
+          <p>Our on-device AI reads context — work app or YouTube rabbit hole? Deadline or meme scroll? It knows.</p>
+        </div>
+        <div class="step-card" id="step-3">
+          <div class="step-num">03</div>
+          <div class="step-icon">💬</div>
+          <h3>Your pet reacts with expressions</h3>
+          <p>Petto pops up with witty quips, proud cheers, or dramatic disappointment. Always adorable. Always honest.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== USE CASES ========== -->
+  <section class="section section-gray" id="features">
+    <div class="container">
+      <span class="section-label">Use cases</span>
+      <h2 class="section-title">Petto has opinions.<br />Strong ones.</h2>
+      <div class="cards-grid">
+        <div class="use-card" id="uc-1">
+          <div class="use-icon">😰</div>
+          <h3>Productivity Guilt</h3>
+          <p>Petto sighs loudly every time you switch from your work doc to Instagram. The guilt is free. The therapy
+            isn't.</p>
+          <span class="use-tag">For procrastinators</span>
+        </div>
+        <div class="use-card" id="uc-2">
+          <div class="use-icon">🍿</div>
+          <h3>Late Night Netflix Shame</h3>
+          <p>"Episode 6? Really? It's 2am." Petto will watch you watch TV and make sure you feel every bit of it.</p>
+          <span class="use-tag">For binge-watchers</span>
+        </div>
+        <div class="use-card" id="uc-3">
+          <div class="use-icon">💻</div>
+          <h3>Coding Encouragement</h3>
+          <p>Push a commit and Petto does a little happy dance. Finally, someone who appreciates your 3am bug fix.</p>
+          <span class="use-tag">For developers</span>
+        </div>
+        <div class="use-card" id="uc-4">
+          <div class="use-icon">🔥</div>
+          <h3>Procrastination Roasting</h3>
+          <p>"You've had that tab open for 4 days. We both know you're not going to read it." Cold. True. Helpful.</p>
+          <span class="use-tag">For the chronically busy</span>
+        </div>
+      </div>
+    </div>
+    <div class="section-dog-sit">
+      <img src="images/pet_dog.png" alt="dog sitting" />
+    </div>
+  </section>
+
+  <!-- ========== PET GALLERY ========== -->
+  <section class="section" id="gallery">
+    <div class="container">
+      <span class="section-label">Pet Gallery</span>
+      <h2 class="section-title">Choose your judge.</h2>
+      <p class="section-sub">Five personalities. Zero chill. Pick your perfect AI companion.</p>
+      <div class="gallery-grid">
+
+        <!-- ── Cat — Free ── -->
+        <div class="gallery-card" id="gc-cat">
+          <div class="gallery-img-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="72" height="72" aria-label="Cat pet">
+              <polygon points="14,32 20,12 28,32" fill="#F0C070"/>
+              <polygon points="52,32 60,12 66,32" fill="#F0C070"/>
+              <polygon points="16,30 20,16 26,30" fill="#FFD0CC"/>
+              <polygon points="54,30 60,16 64,30" fill="#FFD0CC"/>
+              <ellipse cx="40" cy="46" rx="27" ry="24" fill="#F0C070"/>
+              <ellipse cx="32" cy="42" rx="5.5" ry="3" fill="#2d2d2d"/>
+              <ellipse cx="48" cy="42" rx="5.5" ry="3" fill="#2d2d2d"/>
+              <path d="M27,37 L37,39" stroke="#8B6020" stroke-width="2" stroke-linecap="round"/>
+              <path d="M43,39 L53,37" stroke="#8B6020" stroke-width="2" stroke-linecap="round"/>
+              <path d="M38,49 L40,47 L42,49" stroke="#E07070" stroke-width="1.5" fill="none"/>
+              <path d="M35,54 Q40,52 45,54" stroke="#2d2d2d" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+              <line x1="14" y1="48" x2="33" y2="49" stroke="#8B6020" stroke-width="1" opacity="0.4"/>
+              <line x1="14" y1="52" x2="33" y2="51" stroke="#8B6020" stroke-width="1" opacity="0.4"/>
+              <line x1="47" y1="49" x2="66" y2="48" stroke="#8B6020" stroke-width="1" opacity="0.4"/>
+              <line x1="47" y1="51" x2="66" y2="52" stroke="#8B6020" stroke-width="1" opacity="0.4"/>
+            </svg>
+          </div>
+          <h3>Whiskers</h3>
+          <p class="pet-type">The Cat</p>
+          <p class="pet-desc">Judgemental since birth. Deeply unimpressed by your life choices.</p>
+          <div class="pet-mood"><span class="mood-dot mood-orange"></span>Judging You Right Now</div>
+        </div>
+
+        <!-- ── Monkey — Free + Popular ── -->
+        <div class="gallery-card gallery-card-featured" id="gc-monkey">
+          <div class="gallery-badge">Popular · Free</div>
+          <div class="gallery-img-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="72" height="72" aria-label="Monkey pet">
+              <circle cx="13" cy="46" r="11" fill="#B8722A"/>
+              <circle cx="67" cy="46" r="11" fill="#B8722A"/>
+              <circle cx="13" cy="46" r="7" fill="#E89058"/>
+              <circle cx="67" cy="46" r="7" fill="#E89058"/>
+              <ellipse cx="40" cy="44" rx="26" ry="25" fill="#B8722A"/>
+              <ellipse cx="40" cy="53" rx="17" ry="13" fill="#E89058"/>
+              <circle cx="31" cy="39" r="7" fill="white"/>
+              <circle cx="49" cy="39" r="7" fill="white"/>
+              <circle cx="32" cy="40" r="4" fill="#2d2d2d"/>
+              <circle cx="50" cy="40" r="4" fill="#2d2d2d"/>
+              <circle cx="33" cy="38" r="1.5" fill="white"/>
+              <circle cx="51" cy="38" r="1.5" fill="white"/>
+              <path d="M25,32 Q31,28 36,32" stroke="#7A4810" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <path d="M44,32 Q49,28 55,32" stroke="#7A4810" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <ellipse cx="40" cy="50" rx="4.5" ry="3" fill="#7A4810"/>
+              <circle cx="38.5" cy="49" r="1.5" fill="#2d2d2d"/>
+              <circle cx="41.5" cy="49" r="1.5" fill="#2d2d2d"/>
+              <path d="M30,57 Q40,65 50,57" fill="#2d2d2d"/>
+              <path d="M30,57 Q40,63 50,57" fill="white"/>
+            </svg>
+          </div>
+          <h3>Mango</h3>
+          <p class="pet-type">The Monkey</p>
+          <p class="pet-desc">Chaotic energy only. Will throw virtual bananas at your screen mid-Zoom.</p>
+          <div class="pet-mood"><span class="mood-dot mood-orange"></span>Causing Chaos</div>
+        </div>
+
+        <!-- ── Dog — Pro locked ── -->
+        <div class="gallery-card gallery-card-locked" id="gc-dog">
+          <div class="pro-lock-badge"><span class="lock-icon">🔒</span> Pro</div>
+          <div class="gallery-img-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="72" height="72" aria-label="Dog pet">
+              <ellipse cx="17" cy="46" rx="11" ry="16" fill="#C8844A" transform="rotate(-10 17 46)"/>
+              <ellipse cx="63" cy="46" rx="11" ry="16" fill="#C8844A" transform="rotate(10 63 46)"/>
+              <ellipse cx="40" cy="43" rx="25" ry="24" fill="#E8A070"/>
+              <ellipse cx="40" cy="54" rx="15" ry="11" fill="#C8844A"/>
+              <circle cx="31" cy="39" r="6" fill="white"/>
+              <circle cx="49" cy="39" r="6" fill="white"/>
+              <circle cx="32" cy="40" r="3.5" fill="#2d2d2d"/>
+              <circle cx="50" cy="40" r="3.5" fill="#2d2d2d"/>
+              <circle cx="33" cy="38" r="1.2" fill="white"/>
+              <circle cx="51" cy="38" r="1.2" fill="white"/>
+              <path d="M25,33 Q31,29 37,33" stroke="#2d2d2d" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <path d="M43,33 Q49,29 55,33" stroke="#2d2d2d" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <ellipse cx="40" cy="51" rx="5" ry="3.5" fill="#2d2d2d"/>
+              <path d="M30,58 Q40,65 50,58" stroke="#2d2d2d" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <ellipse cx="40" cy="63" rx="5" ry="4" fill="#FF7A7A"/>
+            </svg>
+          </div>
+          <h3>Biscuit</h3>
+          <p class="pet-type">The Dog</p>
+          <p class="pet-desc">Your hype man. Enthusiastic beyond reason about everything you do.</p>
+          <div class="pet-mood"><span class="mood-dot mood-blue"></span>Cheering You On</div>
+        </div>
+
+        <!-- ── Fox — Pro locked ── -->
+        <div class="gallery-card gallery-card-locked" id="gc-fox">
+          <div class="pro-lock-badge"><span class="lock-icon">🔒</span> Pro</div>
+          <div class="gallery-img-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="72" height="72" aria-label="Fox pet">
+              <polygon points="15,36 23,10 31,36" fill="#D45E12"/>
+              <polygon points="49,36 57,10 65,36" fill="#D45E12"/>
+              <polygon points="17,34 23,16 29,34" fill="#FFCBA0"/>
+              <polygon points="51,34 57,16 63,34" fill="#FFCBA0"/>
+              <ellipse cx="40" cy="46" rx="26" ry="23" fill="#D45E12"/>
+              <ellipse cx="40" cy="53" rx="16" ry="13" fill="#FFCBA0"/>
+              <ellipse cx="31" cy="41" rx="5.5" ry="5" fill="white"/>
+              <ellipse cx="49" cy="41" rx="5.5" ry="3.5" fill="white"/>
+              <circle cx="32" cy="41" r="3.2" fill="#1a4000"/>
+              <circle cx="50" cy="41" r="2.5" fill="#1a4000"/>
+              <circle cx="33" cy="40" r="1" fill="white"/>
+              <circle cx="51" cy="40" r="1" fill="white"/>
+              <line x1="45" y1="35" x2="55" y2="37" stroke="#A84000" stroke-width="2" stroke-linecap="round"/>
+              <polygon points="37,50 40,47 43,50" fill="#2d2d2d"/>
+              <path d="M34,57 Q40,55 47,58" stroke="#2d2d2d" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3>Vix</h3>
+          <p class="pet-type">The Fox</p>
+          <p class="pet-desc">Sly and sarcastic. Sees through every excuse you've ever made.</p>
+          <div class="pet-mood"><span class="mood-dot mood-orange"></span>Being Sly</div>
+        </div>
+
+        <!-- ── Ghost — Pro locked ── -->
+        <div class="gallery-card gallery-card-locked" id="gc-ghost">
+          <div class="pro-lock-badge"><span class="lock-icon">🔒</span> Pro</div>
+          <div class="gallery-img-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="72" height="72" aria-label="Ghost pet">
+              <path d="M18,72 L18,38 Q18,14 40,14 Q62,14 62,38 L62,72 Q57,66 52,72 Q47,66 40,72 Q33,66 28,72 Q23,66 18,72 Z" fill="#D8D8F0"/>
+              <ellipse cx="32" cy="42" rx="5.5" ry="6.5" fill="#2d2d2d"/>
+              <ellipse cx="48" cy="42" rx="5.5" ry="6.5" fill="#2d2d2d"/>
+              <circle cx="33" cy="40" r="2.2" fill="white"/>
+              <circle cx="49" cy="40" r="2.2" fill="white"/>
+              <path d="M33,55 Q40,61 47,55" stroke="#2d2d2d" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <ellipse cx="24" cy="52" rx="5" ry="3" fill="#FFB0B0" opacity="0.55"/>
+              <ellipse cx="56" cy="52" rx="5" ry="3" fill="#FFB0B0" opacity="0.55"/>
+              <path d="M65,18 L66.5,22 L70,23.5 L66.5,25 L65,29 L63.5,25 L60,23.5 L63.5,22 Z" fill="#F17720" opacity="0.9"/>
+            </svg>
+          </div>
+          <h3>Boo</h3>
+          <p class="pet-type">The Ghost</p>
+          <p class="pet-desc">Spooky but supportive. Haunts your screen with unconditional love.</p>
+          <div class="pet-mood"><span class="mood-dot mood-blue"></span>Being Supportive</div>
+        </div>
+
+      </div>
+      <div class="gallery-cta">
+        <a href="https://github.com/dvntonway/ai-desktop-pet/releases/download/v0.1.1/Petto.Setup.0.1.1.exe"
+          class="btn-primary btn-lg" id="gallery-download" download="Petto.Setup.0.1.1.exe" target="_blank">⬇ Download
+          Petto Free</a>
+        <p class="gallery-note">Windows · v0.1.1 · Free to start · No sign-up</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== PRICING ========== -->
+  <section class="section section-gray" id="pricing">
+    <div class="container">
+      <span class="section-label">Pricing</span>
+      <h2 class="section-title">Simple, honest pricing.<br />No surprises.</h2>
+      <p class="section-sub">Start free. Upgrade when Petto earns it.</p>
+      <div class="pricing-grid">
+
+        <!-- Free Plan -->
+        <div class="plan-card" id="plan-free">
+          <div class="plan-name">Free</div>
+          <div class="plan-price">$0<span class="plan-period"> / forever</span></div>
+          <p class="plan-desc">Perfect for testing if a cartoon cat can actually fix your productivity.</p>
+          <ul class="plan-features">
+            <li>✓ 50 reactions per day</li>
+            <li>✓ 2 pets — Cat &amp; Monkey</li>
+            <li>✓ All core emotions</li>
+            <li>✓ No sign-up required</li>
+            <li class="feature-dim">✗ Dog, Fox &amp; Ghost pets</li>
+            <li class="feature-dim">✗ 150 reactions per day</li>
+          </ul>
+          <a href="https://github.com/dvntonway/ai-desktop-pet/releases/download/v0.1.1/Petto.Setup.0.1.1.exe"
+            class="btn-plan" download="Petto.Setup.0.1.1.exe" target="_blank">Download Free</a>
+        </div>
+
+        <!-- Pro Plan -->
+        <div class="plan-card plan-card-pro" id="plan-pro">
+          <div class="plan-most-popular">Most Popular</div>
+          <div class="plan-name">Pro</div>
+          <div class="plan-price">$4.99<span class="plan-period"> / month</span></div>
+          <p class="plan-desc">For those who want the full judgment experience. All pets. No mercy.</p>
+          <ul class="plan-features">
+            <li>✓ 150 reactions per day</li>
+            <li>✓ All 5 pets unlocked</li>
+            <li>✓ All emotions &amp; sleeping mode</li>
+            <li>✓ Dog, Fox &amp; Ghost pets</li>
+            <li>✓ Priority support</li>
+            <li>✓ Early access to new pets</li>
+          </ul>
+          <a href="mailto:dvntonway@gmail.com?subject=Petto%20Pro"
+            class="btn-plan btn-plan-pro">Get Pro →</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FOOTER ========== -->
+  <footer id="footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <span class="logo"><span class="logo-dot">●</span> Petto</span>
+        <p>Your AI pet that keeps it real.</p>
+        <p class="footer-email">📧 <a href="mailto:dvntonway@gmail.com">dvntonway@gmail.com</a></p>
+      </div>
+      <div class="footer-right">
+        <div class="social-links">
+          <a href="#" class="social-btn" id="social-twitter" aria-label="Twitter">𝕏</a>
+          <a href="#" class="social-btn" id="social-instagram" aria-label="Instagram">◈</a>
+          <a href="#" class="social-btn" id="social-discord" aria-label="Discord">⌘</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>Petto © 2026 — Made with 🧡 and mild judgment</p>
+    </div>
+    <div class="footer-barbie">
+      <img src="images/pet_barbie.png" alt="barbie footer" />
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
