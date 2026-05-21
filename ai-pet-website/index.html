@@ -526,8 +526,9 @@
     function googleSignIn() {
       document.getElementById('pay-google-btn').disabled = true;
       document.getElementById('pay-google-btn-text').textContent = 'Redirecting to Google…';
-      localStorage.setItem('petto_pay_intent', '1');
-      const callbackUrl = 'https://dvntonway.github.io/ai-desktop-pet/ai-pet-website/callback.html';
+      // ?intent=pay is preserved by Supabase through the redirect chain and read
+      // by callback.html from location.search — no localStorage dependency.
+      const callbackUrl = 'https://dvntonway.github.io/ai-desktop-pet/ai-pet-website/callback.html?intent=pay';
       window.location.href = `${SUPA_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(callbackUrl)}`;
     }
 

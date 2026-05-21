@@ -99,10 +99,12 @@
       }));
     } catch { /* private-browsing may block writes — ignore */ }
 
-    const payIntent = localStorage.getItem('petto_pay_intent');
+    // Intent is encoded in the URL (?intent=pay) by googleSignIn() via redirect_to.
+    // Supabase preserves query params through the OAuth redirect chain, so this
+    // is reliable even in browsers that restrict cross-origin localStorage.
+    const payIntent = new URLSearchParams(location.search).get('intent') === 'pay';
     if (payIntent) {
       // ── Web payment intent: return to pricing page ──────────────────────
-      localStorage.removeItem('petto_pay_intent');
       document.getElementById('heading').textContent = 'Signed in! Returning…';
       document.getElementById('sub').textContent     = 'Taking you back to complete your upgrade.';
       setTimeout(() => {
