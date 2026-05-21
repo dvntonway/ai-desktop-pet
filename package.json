@@ -1,6 +1,6 @@
 {
   "name": "ai-desktop-pet",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "An AI pet that stays with you while you are working",
   "private": true,
   "main": "electron/main.js",
@@ -16,7 +16,7 @@
       "output": "dist"
     },
     "files": [
-      "dist/**/*",
+      "dist-renderer/**/*",
       "electron/**/*",
       "node_modules/**/*",
       "package.json"
