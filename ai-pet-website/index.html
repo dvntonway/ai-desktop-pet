@@ -697,9 +697,19 @@
           saveWebSession(data);
           await initiatePayment(data.access_token);
         } else {
-          // Email confirmation required — tell the user to confirm then sign in
+          // Email confirmation required — show message then auto-switch to sign-in panel
           errorEl.style.color = '#80e0a0';
-          errorEl.textContent = '✓ Check your inbox to confirm your email, then sign in.';
+          errorEl.textContent = '✓ Almost there! Confirm your email, then sign in here.';
+          setTimeout(() => {
+            showCard('pay-auth-card');
+            const emailEl = document.getElementById('pay-email');
+            if (emailEl) emailEl.value = email;
+            const authErr = document.getElementById('pay-auth-error');
+            if (authErr) {
+              authErr.style.color = '#80e0a0';
+              authErr.textContent = 'Email confirmed? Sign in below to continue.';
+            }
+          }, 3000);
         }
       } catch {
         errorEl.textContent = 'Network error. Please try again.';
