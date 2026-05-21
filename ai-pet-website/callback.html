@@ -99,50 +99,37 @@
       }));
     } catch { /* private-browsing may block writes — ignore */ }
 
-    // ── Web payment intent: return to pricing page ────────────────────────────
-    // googleSignIn() in index.html sets this flag before redirecting to Google
-    // OAuth. localStorage is used (not sessionStorage) because sessionStorage
-    // is cleared by some browsers during multi-hop cross-origin redirects
-    // (GitHub Pages → Google → Supabase → GitHub Pages).
     const payIntent = localStorage.getItem('petto_pay_intent');
     if (payIntent) {
+      // ── Web payment intent: return to pricing page ──────────────────────
       localStorage.removeItem('petto_pay_intent');
       document.getElementById('heading').textContent = 'Signed in! Returning…';
       document.getElementById('sub').textContent     = 'Taking you back to complete your upgrade.';
-      // Short delay so the user sees the confirmation before the redirect
       setTimeout(() => {
         window.location.href =
           'https://dvntonway.github.io/ai-desktop-pet/ai-pet-website/index.html?pay=1';
       }, 800);
-      return;
-    }
+    } else {
+      // ── Desktop app flow: relay tokens to petto:// ──────────────────────
+      const pettoUrl = 'petto://auth/callback'
+        + '?access_token='  + encodeURIComponent(accessToken)
+        + '&refresh_token=' + encodeURIComponent(refreshToken)
+        + '&expires_in='    + encodeURIComponent(expiresIn);
 
-    // ── Desktop app flow: relay tokens to petto:// ────────────────────────────
-    // Build the petto:// URL using *query params* (not hash).
-    // Hash fragments are stripped by some browsers before invoking a protocol
-    // handler, but query params survive intact and are forwarded to the Electron
-    // process via argv.
-    const pettoUrl = 'petto://auth/callback'
-      + '?access_token='  + encodeURIComponent(accessToken)
-      + '&refresh_token=' + encodeURIComponent(refreshToken)
-      + '&expires_in='    + encodeURIComponent(expiresIn);
+      const btn = document.getElementById('btn-open');
+      btn.href = pettoUrl;
 
-    // Wire up the manual button first so it's ready if auto-redirect is slow
-    const btn = document.getElementById('btn-open');
-    btn.href = pettoUrl;
-
-    // Auto-redirect after a short delay (lets the page render first)
-    setTimeout(() => {
-      window.location.href = pettoUrl;
-
-      // If the browser couldn't open the protocol, show the manual button after 2 s
       setTimeout(() => {
-        document.getElementById('spinner').style.display = 'none';
-        document.getElementById('heading').textContent   = 'Click below to open Petto';
-        document.getElementById('sub').textContent       = 'Your browser may have blocked the automatic redirect.';
-        btn.style.display = 'inline-block';
-      }, 2000);
-    }, 300);
+        window.location.href = pettoUrl;
+
+        setTimeout(() => {
+          document.getElementById('spinner').style.display = 'none';
+          document.getElementById('heading').textContent   = 'Click below to open Petto';
+          document.getElementById('sub').textContent       = 'Your browser may have blocked the automatic redirect.';
+          btn.style.display = 'inline-block';
+        }, 2000);
+      }, 300);
+    }
   }
 </script>
 </body>
