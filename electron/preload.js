@@ -16,4 +16,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Send the final parsed AI JSON to the terminal
   notifyScreenshotTaken: (json) => ipcRenderer.send('screenshot-taken', json),
+
+  // Tier + active-pet info (resolved once on mount, then kept via onPetChanged)
+  getTier: () => ipcRenderer.invoke('get-tier'),
+
+  // Fires whenever the user switches pets from the tray menu
+  onPetChanged: (callback) => ipcRenderer.on('pet-changed', (_, petId) => callback(petId)),
 });

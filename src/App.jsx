@@ -8,6 +8,13 @@ export default function App() {
   const [text, setText] = useState(null);
   const [hidden, setHidden] = useState(false);
   const [blinking, setBlinking] = useState(false);
+  const [activePet, setActivePet] = useState('cat');
+
+  // Load tier + active pet on mount, then listen for tray-menu switches
+  useEffect(() => {
+    window.electronAPI.getTier().then(({ activePet: pet }) => setActivePet(pet));
+    window.electronAPI.onPetChanged((pet) => setActivePet(pet));
+  }, []);
 
   useEffect(() => {
     return onJudgement((json) => {
@@ -43,7 +50,7 @@ export default function App() {
       style={{ opacity: hidden ? 0 : 1, WebkitAppRegion: 'drag' }}
     >
       <SpeechBubble text={text} />
-      <PetFace emotion={emotion} blinking={blinking} />
+      <PetFace emotion={emotion} blinking={blinking} pet={activePet} />
     </div>
   );
 }
