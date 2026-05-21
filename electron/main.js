@@ -1,11 +1,29 @@
-require('dotenv').config();
+const path = require('path');
+const fs   = require('fs');
+
+// Load .env without dotenv — works in both dev and packaged builds.
+// Dev:       ../relative to electron/ == project root
+// Packaged:  electron-builder copies .env into resources/; process.resourcesPath points there.
+for (const envPath of [
+  path.join(__dirname, '../.env'),
+  process.resourcesPath && path.join(process.resourcesPath, '.env'),
+].filter(Boolean)) {
+  try {
+    for (const line of fs.readFileSync(envPath, 'utf8').split(/\r?\n/)) {
+      const i = line.indexOf('=');
+      if (i > 0 && !line.startsWith('#')) {
+        const k = line.slice(0, i).trim();
+        if (k && !(k in process.env)) process.env[k] = line.slice(i + 1).trim();
+      }
+    }
+    break;
+  } catch {}
+}
 
 const {
   app, BrowserWindow, Tray, Menu, screen,
   nativeImage, ipcMain, desktopCapturer,
 } = require('electron');
-const path = require('path');
-const fs   = require('fs');
 const { deflateSync } = require('zlib');
 
 const isDev = process.argv.includes('--dev');
@@ -26,8 +44,8 @@ const SETTINGS_FILE = path.join(USER_DATA, 'petto-settings.json');
 // ---------------------------------------------------------------------------
 // Supabase
 // ---------------------------------------------------------------------------
-const SUPA_URL  = 'https://vbeujywkmrzldmvznojd.supabase.co';
-const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZiZXVqeXdrbXJ6bGRtdnpub2pkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjY5MjMsImV4cCI6MjA5NDYwMjkyM30.hZM1Vk5fIXz2zgShr4qnUiRjcLwbAJD1duEGjnexCzQ';
+const SUPA_URL  = process.env.SUPABASE_URL      || 'https://vbeujywkmrzldmvznojd.supabase.co';
+const SUPA_ANON = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZiZXVqeXdrbXJ6bGRtdnpub2pkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjY5MjMsImV4cCI6MjA5NDYwMjkyM30.hZM1Vk5fIXz2zgShr4qnUiRjcLwbAJD1duEGjnexCzQ';
 
 // ---------------------------------------------------------------------------
 // Tier config
