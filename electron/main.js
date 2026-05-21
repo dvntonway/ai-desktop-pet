@@ -196,7 +196,7 @@ if (!gotLock) {
   app.on('second-instance', (_, argv) => {
     const url = argv.find(a => a.startsWith('petto://'));
     if (url) handleDeepLink(url);
-    if (win) { win.show(); win.focus(); }
+    if (win && !win.isDestroyed()) { win.show(); win.focus(); }
   });
 }
 
@@ -311,9 +311,11 @@ function updateTrayMenu() {
 
   tray.setContextMenu(Menu.buildFromTemplate([
     {
-      label: win?.isVisible() ? 'Hide Pet' : 'Show Pet',
+      label: (win && !win.isDestroyed() && win.isVisible()) ? 'Hide Pet' : 'Show Pet',
       click: () => {
-        if (win?.isVisible()) win.hide(); else win.show();
+        if (win && !win.isDestroyed()) {
+          if (win.isVisible()) win.hide(); else win.show();
+        }
         updateTrayMenu();
       },
     },
