@@ -519,12 +519,14 @@
     }
 
     // ── Google OAuth ──────────────────────────────────────────────────────────
-    // Sets petto_pay_intent in sessionStorage so callback.html redirects back
+    // Sets petto_pay_intent in localStorage so callback.html redirects back
     // here with ?pay=1, which auto-triggers initiatePayment().
+    // localStorage (not sessionStorage) is used because sessionStorage is
+    // cleared by some browsers across multi-hop cross-origin redirects.
     function googleSignIn() {
       document.getElementById('pay-google-btn').disabled = true;
       document.getElementById('pay-google-btn-text').textContent = 'Redirecting to Google…';
-      sessionStorage.setItem('petto_pay_intent', '1');
+      localStorage.setItem('petto_pay_intent', '1');
       const callbackUrl = 'https://dvntonway.github.io/ai-desktop-pet/ai-pet-website/callback.html';
       window.location.href = `${SUPA_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(callbackUrl)}`;
     }

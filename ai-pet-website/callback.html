@@ -101,11 +101,12 @@
 
     // ── Web payment intent: return to pricing page ────────────────────────────
     // googleSignIn() in index.html sets this flag before redirecting to Google
-    // OAuth. sessionStorage persists across cross-origin navigation within the
-    // same tab, so the flag is readable here after the OAuth round-trip.
-    const payIntent = sessionStorage.getItem('petto_pay_intent');
+    // OAuth. localStorage is used (not sessionStorage) because sessionStorage
+    // is cleared by some browsers during multi-hop cross-origin redirects
+    // (GitHub Pages → Google → Supabase → GitHub Pages).
+    const payIntent = localStorage.getItem('petto_pay_intent');
     if (payIntent) {
-      sessionStorage.removeItem('petto_pay_intent');
+      localStorage.removeItem('petto_pay_intent');
       document.getElementById('heading').textContent = 'Signed in! Returning…';
       document.getElementById('sub').textContent     = 'Taking you back to complete your upgrade.';
       // Short delay so the user sees the confirmation before the redirect
