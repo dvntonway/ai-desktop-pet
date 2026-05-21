@@ -380,7 +380,7 @@
       background: #1a1b2e;
       border-radius: 20px;
       padding: 40px 36px 32px;
-      width: 100%; max-width: 400px;
+      width: 100%; max-width: 380px;
       margin: 16px;
       position: relative;
       box-shadow: 0 24px 72px rgba(0,0,0,0.65);
@@ -401,91 +401,66 @@
     .pay-close:hover { color: #aaa; }
 
     /* ── Content ── */
-    .pay-logo  { font-size: 48px; text-align: center; line-height: 1; margin-bottom: 10px; }
-    .pay-card h2 { text-align: center; font-size: 20px; font-weight: 700; letter-spacing: -.4px; margin-bottom: 5px; }
-    .pay-card .pay-sub { text-align: center; color: #a0a0c0; font-size: 13px; margin-bottom: 24px; line-height: 1.5; }
+    .pay-logo { font-size: 48px; text-align: center; line-height: 1; margin-bottom: 12px; }
+    .pay-card h2 { text-align: center; font-size: 20px; font-weight: 700; letter-spacing: -.4px; margin-bottom: 6px; }
+    .pay-sub { text-align: center; color: #a0a0c0; font-size: 13px; margin-bottom: 28px; line-height: 1.55; }
 
-    /* ── Form ── */
-    .pay-field { margin-bottom: 13px; }
-    .pay-field input {
-      width: 100%; padding: 11px 14px;
-      background: rgba(255,255,255,0.06);
-      border: 1.5px solid rgba(255,255,255,0.10);
-      border-radius: 10px;
-      color: #e8e8f0; font-family: inherit; font-size: 14px;
-      outline: none; transition: border-color 0.15s;
-      box-sizing: border-box;
+    /* ── Google button ── */
+    .pay-btn-google {
+      width: 100%;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: #fff; color: #1a1a2e;
+      border: none; border-radius: 12px;
+      padding: 13px 20px; font-family: inherit;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: opacity 0.15s, box-shadow 0.15s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
     }
-    .pay-field input:focus { border-color: #F17720; }
-    .pay-field input::placeholder { color: rgba(255,255,255,0.22); }
+    .pay-btn-google:hover   { opacity: 0.92; box-shadow: 0 4px 16px rgba(0,0,0,0.28); }
+    .pay-btn-google:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* ── Button ── */
+    /* ── Primary button (success card) ── */
     .pay-btn {
       width: 100%; background: #F17720; color: #fff;
       border: none; border-radius: 12px;
       padding: 13px; font-family: inherit;
       font-size: 15px; font-weight: 700;
-      cursor: pointer; transition: opacity 0.15s; margin-top: 2px;
+      cursor: pointer; transition: opacity 0.15s;
     }
-    .pay-btn:hover   { opacity: 0.88; }
-    .pay-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .pay-btn:hover { opacity: 0.88; }
 
-    .pay-note { text-align: center; font-size: 12px; color: #666; margin-top: 14px; }
-    .pay-note a { color: #F17720; text-decoration: none; }
+    .pay-note { text-align: center; font-size: 12px; color: #555; margin-top: 14px; }
 
     .pay-error {
       color: #ff8080; font-size: 13px;
-      text-align: center; margin-top: 10px; min-height: 18px;
+      text-align: center; margin-top: 12px; min-height: 18px;
     }
 
     /* ── Success ── */
-    .pay-success-icon { font-size: 56px; text-align: center; margin-bottom: 10px; }
+    .pay-success-icon   { font-size: 56px; text-align: center; margin-bottom: 10px; }
     .pay-success-detail { text-align: center; color: #a0a0c0; font-size: 13px; margin-bottom: 24px; line-height: 1.6; }
   </style>
 
   <!-- Overlay -->
   <div id="pay-overlay" onclick="payOverlayClick(event)">
 
-    <!-- Sign-in card (shown when not authenticated) -->
+    <!-- Sign-in card — Google only -->
     <div class="pay-card" id="pay-auth-card" style="display:none">
       <button class="pay-close" onclick="closePayOverlay()" aria-label="Close">×</button>
       <div class="pay-logo">🐱</div>
-      <h2>Sign in to upgrade</h2>
-      <p class="pay-sub">Use your Petto account — the same one<br>you use in the desktop app.</p>
-      <div class="pay-field">
-        <input type="email" id="pay-email" placeholder="Email address" autocomplete="email" />
-      </div>
-      <div class="pay-field">
-        <input type="password" id="pay-password" placeholder="Password" autocomplete="current-password" />
-      </div>
-      <button class="pay-btn" id="pay-signin-btn" onclick="signInAndPay()">Continue to Payment →</button>
+      <h2>Upgrade to Pro</h2>
+      <p class="pay-sub">Sign in with Google, then<br>complete your purchase. Two clicks.</p>
+      <button class="pay-btn-google" id="pay-google-btn" onclick="googleSignIn()">
+        <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908C16.658 14.013 17.64 11.705 17.64 9.2z" fill="#4285F4"/>
+          <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+          <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+          <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+        </svg>
+        <span id="pay-google-btn-text">Continue with Google</span>
+      </button>
       <div class="pay-error" id="pay-auth-error"></div>
-      <p class="pay-note">
-        New to Petto? <a href="#" onclick="showCard('pay-signup-card');return false">Create an account</a><br>
-        Signed up with Google? <a href="#" onclick="googleSignIn();return false">Sign in via browser</a>
-      </p>
-    </div>
-
-    <!-- Sign-up card -->
-    <div class="pay-card" id="pay-signup-card" style="display:none">
-      <button class="pay-close" onclick="closePayOverlay()" aria-label="Close">×</button>
-      <div class="pay-logo">🐱</div>
-      <h2>Create your account</h2>
-      <p class="pay-sub">Sign up for Petto, then complete<br>your Pro upgrade.</p>
-      <div class="pay-field">
-        <input type="email"    id="pay-signup-email"    placeholder="Email address"        autocomplete="email" />
-      </div>
-      <div class="pay-field">
-        <input type="password" id="pay-signup-password" placeholder="Password (min 6 chars)" autocomplete="new-password" />
-      </div>
-      <div class="pay-field">
-        <input type="password" id="pay-signup-confirm"  placeholder="Confirm password"     autocomplete="new-password" />
-      </div>
-      <button class="pay-btn" id="pay-signup-btn" onclick="signUp()">Create Account &amp; Pay →</button>
-      <div class="pay-error" id="pay-signup-error"></div>
-      <p class="pay-note">Already have an account?
-        <a href="#" onclick="showCard('pay-auth-card');return false">Sign in</a>
-      </p>
+      <p class="pay-note">₹499 / month &nbsp;·&nbsp; Secure checkout via Razorpay</p>
     </div>
 
     <!-- Success card -->
@@ -514,19 +489,17 @@
       try { return JSON.parse(localStorage.getItem(WEB_SESSION_KEY) || 'null'); }
       catch { return null; }
     }
-    function saveWebSession(data) {
-      localStorage.setItem(WEB_SESSION_KEY, JSON.stringify({
-        access_token:  data.access_token,
-        refresh_token: data.refresh_token,
-      }));
-    }
 
     // ── Overlay helpers ───────────────────────────────────────────────────────
-    function showCard(id) {
-      ['pay-auth-card', 'pay-signup-card', 'pay-success-card'].forEach(cid => {
-        document.getElementById(cid).style.display = cid === id ? 'block' : 'none';
-      });
+    function showAuthCard(errorMsg) {
+      document.getElementById('pay-auth-card').style.display    = 'block';
+      document.getElementById('pay-success-card').style.display = 'none';
       document.getElementById('pay-overlay').classList.add('open');
+      const errEl = document.getElementById('pay-auth-error');
+      errEl.textContent = errorMsg || '';
+      // Reset button in case it was mid-redirect
+      document.getElementById('pay-google-btn').disabled = false;
+      document.getElementById('pay-google-btn-text').textContent = 'Continue with Google';
     }
     function closePayOverlay() {
       document.getElementById('pay-overlay').classList.remove('open');
@@ -535,52 +508,28 @@
       if (e.target === document.getElementById('pay-overlay')) closePayOverlay();
     }
 
-    // ── Entry point: "Get Pro →" button ───────────────────────────────────────
+    // ── Entry point: "Get Pro →" button ──────────────────────────────────────
     async function startProUpgrade() {
       const session = getWebSession();
       if (session?.access_token) {
         await initiatePayment(session.access_token);
       } else {
-        showCard('pay-auth-card');
-        document.getElementById('pay-auth-error').textContent = '';
-        document.getElementById('pay-email').value    = '';
-        document.getElementById('pay-password').value = '';
+        showAuthCard();
       }
     }
 
-    // ── Sign in then pay ──────────────────────────────────────────────────────
-    async function signInAndPay() {
-      const email    = document.getElementById('pay-email').value.trim();
-      const password = document.getElementById('pay-password').value;
-      const errorEl  = document.getElementById('pay-auth-error');
-      const btn      = document.getElementById('pay-signin-btn');
-
-      errorEl.textContent = '';
-      if (!email || !password) { errorEl.textContent = 'Please enter your email and password.'; return; }
-
-      btn.disabled    = true;
-      btn.textContent = 'Signing in…';
-
-      try {
-        const res  = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPA_ANON },
-          body:    JSON.stringify({ email, password }),
-        });
-        const data = await res.json();
-        if (!res.ok) { errorEl.textContent = data.error_description || 'Sign in failed — check your credentials.'; return; }
-
-        saveWebSession(data);
-        await initiatePayment(data.access_token);
-      } catch {
-        errorEl.textContent = 'Network error. Please try again.';
-      } finally {
-        btn.disabled    = false;
-        btn.textContent = 'Continue to Payment →';
-      }
+    // ── Google OAuth ──────────────────────────────────────────────────────────
+    // Sets petto_pay_intent in sessionStorage so callback.html redirects back
+    // here with ?pay=1, which auto-triggers initiatePayment().
+    function googleSignIn() {
+      document.getElementById('pay-google-btn').disabled = true;
+      document.getElementById('pay-google-btn-text').textContent = 'Redirecting to Google…';
+      sessionStorage.setItem('petto_pay_intent', '1');
+      const callbackUrl = 'https://dvntonway.github.io/ai-desktop-pet/ai-pet-website/callback.html';
+      window.location.href = `${SUPA_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(callbackUrl)}`;
     }
 
-    // ── Create Razorpay order → open checkout ─────────────────────────────────
+    // ── Create Razorpay order → open checkout ────────────────────────────────
     async function initiatePayment(token) {
       try {
         const res = await fetch(`${EDGE_URL}/create-order`, {
@@ -594,11 +543,9 @@
 
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          // Token expired — clear session and ask to re-login
           if (res.status === 401) {
             localStorage.removeItem(WEB_SESSION_KEY);
-            showCard('pay-auth-card');
-            document.getElementById('pay-auth-error').textContent = 'Session expired — please sign in again.';
+            showAuthCard('Session expired — please sign in again.');
             return;
           }
           alert('Could not start payment: ' + (err.error || 'Unknown error'));
@@ -619,15 +566,11 @@
           handler: async function(response) {
             await verifyAndUpgrade(token, response);
           },
-          modal: {
-            ondismiss: function() { /* user closed checkout */ },
-          },
+          modal: { ondismiss: function() {} },
         };
 
-        // Close auth modal before Razorpay opens (avoids z-index fights)
         closePayOverlay();
-        const rzp = new window.Razorpay(options);
-        rzp.open();
+        new window.Razorpay(options).open();
 
       } catch (e) {
         console.error(e);
@@ -658,98 +601,29 @@
           return;
         }
 
-        showCard('pay-success-card');
+        document.getElementById('pay-auth-card').style.display    = 'none';
+        document.getElementById('pay-success-card').style.display = 'block';
+        document.getElementById('pay-overlay').classList.add('open');
       } catch (e) {
         console.error(e);
         alert('Could not verify payment. Please contact dvntonway@gmail.com with your payment ID.');
       }
     }
 
-    // ── Sign up ───────────────────────────────────────────────────────────────
-    async function signUp() {
-      const email    = document.getElementById('pay-signup-email').value.trim();
-      const password = document.getElementById('pay-signup-password').value;
-      const confirm  = document.getElementById('pay-signup-confirm').value;
-      const errorEl  = document.getElementById('pay-signup-error');
-      const btn      = document.getElementById('pay-signup-btn');
-
-      errorEl.style.color = '#ff8080';
-      errorEl.textContent = '';
-
-      if (!email || !password || !confirm) { errorEl.textContent = 'Please fill in all fields.'; return; }
-      if (password.length < 6)             { errorEl.textContent = 'Password must be at least 6 characters.'; return; }
-      if (password !== confirm)            { errorEl.textContent = 'Passwords do not match.'; return; }
-
-      btn.disabled    = true;
-      btn.textContent = 'Creating account…';
-
-      try {
-        const res  = await fetch(`${SUPA_URL}/auth/v1/signup`, {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPA_ANON },
-          body:    JSON.stringify({ email, password }),
-        });
-        const data = await res.json();
-        if (!res.ok) { errorEl.textContent = data.error_description || 'Sign up failed.'; return; }
-
-        if (data.access_token) {
-          // Email confirmations disabled — proceed straight to payment
-          saveWebSession(data);
-          await initiatePayment(data.access_token);
-        } else {
-          // Email confirmation required — show message then auto-switch to sign-in panel
-          errorEl.style.color = '#80e0a0';
-          errorEl.textContent = '✓ Almost there! Confirm your email, then sign in here.';
-          setTimeout(() => {
-            showCard('pay-auth-card');
-            const emailEl = document.getElementById('pay-email');
-            if (emailEl) emailEl.value = email;
-            const authErr = document.getElementById('pay-auth-error');
-            if (authErr) {
-              authErr.style.color = '#80e0a0';
-              authErr.textContent = 'Email confirmed? Sign in below to continue.';
-            }
-          }, 3000);
-        }
-      } catch {
-        errorEl.textContent = 'Network error. Please try again.';
-      } finally {
-        btn.disabled    = false;
-        btn.textContent = 'Create Account & Pay →';
-      }
-    }
-
-    // ── Google OAuth ──────────────────────────────────────────────────────────
-    // Set a flag in sessionStorage so callback.html knows to return here after auth
-    // (sessionStorage persists across cross-origin navigation within the same tab)
-    function googleSignIn() {
-      sessionStorage.setItem('petto_pay_intent', '1');
-      const callbackUrl = 'https://dvntonway.github.io/ai-desktop-pet/ai-pet-website/callback.html';
-      window.location.href = `${SUPA_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(callbackUrl)}`;
-    }
-
-    // ── Auto-trigger payment when redirected back from callback.html ──────────
+    // ── Auto-trigger payment when redirected back from Google OAuth ───────────
+    // callback.html sets ?pay=1 when petto_pay_intent was set before OAuth
     window.addEventListener('DOMContentLoaded', () => {
       if (new URLSearchParams(location.search).get('pay') === '1') {
-        const session = getWebSession();
-        // Clean up the URL param so a page refresh doesn't re-trigger
+        // Clean the URL so a refresh doesn't re-trigger
         history.replaceState(null, '', location.pathname + '#pricing');
+        document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+        const session = getWebSession();
         if (session?.access_token) {
-          document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
           setTimeout(() => initiatePayment(session.access_token), 700);
         } else {
-          // Session missing — show sign-in modal
-          document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
-          setTimeout(() => showCard('pay-auth-card'), 700);
+          setTimeout(() => showAuthCard('Sign in to complete your upgrade.'), 700);
         }
       }
-    });
-
-    // ── Enter key submits whichever form is visible ───────────────────────────
-    document.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter') return;
-      if (document.getElementById('pay-auth-card').style.display   !== 'none') signInAndPay();
-      if (document.getElementById('pay-signup-card').style.display !== 'none') signUp();
     });
   </script>
 </body>
