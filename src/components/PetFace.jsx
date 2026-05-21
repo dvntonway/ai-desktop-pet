@@ -1,3 +1,15 @@
+import Lottie from 'lottie-react';
+import catAnimation    from '../assets/Loader_cat.json';
+import monkeyAnimation from '../assets/monkey.json';
+import dogAnimation    from '../assets/dog.json';
+
+// Lottie-animated pets (body/head/ears drawn by Lottie; emotion overlay drawn in SVG on top)
+const LOTTIE_MAP = {
+  cat:    catAnimation,
+  monkey: monkeyAnimation,
+  dog:    dogAnimation,
+};
+
 export const EMOTIONS = ['happy', 'judging', 'shocked', 'proud', 'bored', 'sleeping'];
 
 // ─── Per-pet colour palettes ──────────────────────────────────────────────────
@@ -262,10 +274,35 @@ const BASES = {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function PetFace({ emotion = 'happy', blinking = false, pet = 'cat' }) {
-  const P    = PAL[pet]   ?? PAL.cat;
-  const Base = BASES[pet] ?? BASES.cat;
+  const P     = PAL[pet]   ?? PAL.cat;
+  const Base  = BASES[pet] ?? BASES.cat;
   const faces = makeFaces(P);
 
+  // Cat / Monkey / Dog → Lottie body + SVG emotion overlay
+  if (LOTTIE_MAP[pet]) {
+    return (
+      <div style={{ position: 'relative', width: 200, height: 250 }}>
+        <Lottie
+          animationData={LOTTIE_MAP[pet]}
+          loop
+          style={{ width: 200, height: 250 }}
+        />
+        {/* Emotion + blink drawn on top of the Lottie body */}
+        <svg
+          viewBox="0 0 200 250"
+          width="200"
+          height="250"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
+        >
+          {faces[emotion] ?? faces.happy}
+          {blinking && emotion !== 'sleeping' && makeBlinkOverlay(P)}
+        </svg>
+      </div>
+    );
+  }
+
+  // Fox / Ghost → pure SVG
   return (
     <svg viewBox="0 0 200 250" width="200" height="250" xmlns="http://www.w3.org/2000/svg">
       <Base P={P} />

@@ -1,6 +1,6 @@
 {
   "name": "ai-desktop-pet",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "An AI pet that stays with you while you are working",
   "private": true,
   "main": "electron/main.js",
@@ -22,10 +22,20 @@
       "package.json"
     ],
     "extraResources": [
-      { "from": ".env", "to": ".env" }
+      {
+        "from": ".env",
+        "to": ".env"
+      }
     ],
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "build/icon.ico"
     },
     "nsis": {
@@ -34,10 +44,16 @@
       "artifactName": "${productName}.Setup.${version}.exe"
     },
     "protocols": [
-      { "name": "Petto", "schemes": ["petto"] }
+      {
+        "name": "Petto",
+        "schemes": [
+          "petto"
+        ]
+      }
     ]
   },
   "dependencies": {
+    "lottie-react": "^2.4.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

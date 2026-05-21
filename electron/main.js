@@ -296,18 +296,21 @@ function createWindow() {
 function updateTrayMenu() {
   const allowed = (TIER_LIMITS[currentTier] ?? TIER_LIMITS.free).pets;
 
-  const petItems = ALL_PETS.map(p => ({
-    label: allowed.includes(p.id)
-      ? (activePet === p.id ? `✓ ${p.label}` : `   ${p.label}`)
-      : `🔒 ${p.label}`,
-    enabled: allowed.includes(p.id),
-    click: () => {
-      activePet = p.id;
-      saveSettings();
-      if (win && !win.isDestroyed()) win.webContents.send('pet-changed', p.id);
-      updateTrayMenu();
-    },
-  }));
+  const petItems = ALL_PETS.map(p => {
+    const isAllowed = allowed.includes(p.id);
+    return {
+      label:   isAllowed ? p.label : `🔒 ${p.label}`,
+      type:    isAllowed ? 'checkbox' : 'normal',
+      checked: isAllowed && activePet === p.id,
+      enabled: isAllowed,
+      click: () => {
+        activePet = p.id;
+        saveSettings();
+        if (win && !win.isDestroyed()) win.webContents.send('pet-changed', p.id);
+        updateTrayMenu();
+      },
+    };
+  });
 
   tray.setContextMenu(Menu.buildFromTemplate([
     {
@@ -332,6 +335,10 @@ function createTray() {
   tray = new Tray(createTrayIcon());
   tray.setToolTip('Petto');
   updateTrayMenu();
+
+  // Ensure the context menu pops up on both left- and right-click on Windows
+  tray.on('click',       () => tray.popUpContextMenu());
+  tray.on('right-click', () => tray.popUpContextMenu());
 }
 
 // ---------------------------------------------------------------------------
