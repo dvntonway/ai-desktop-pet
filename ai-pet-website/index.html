@@ -528,7 +528,7 @@
       document.getElementById('pay-google-btn-text').textContent = 'Redirecting to Google…';
       // ?intent=pay is preserved by Supabase through the redirect chain and read
       // by callback.html from location.search — no localStorage dependency.
-      const callbackUrl = 'https://dvntonway.github.io/ai-desktop-pet/ai-pet-website/callback.html?intent=pay';
+      const callbackUrl = 'https://pettoai.netlify.app/callback.html?intent=pay';
       window.location.href = `${SUPA_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(callbackUrl)}`;
     }
 
@@ -564,7 +564,7 @@
           order_id,
           name:        'Petto',
           description: 'Pro Plan — ₹499 / month',
-          image:       'https://dvntonway.github.io/ai-desktop-pet/ai-pet-website/images/pet_cat.png',
+          image:       'https://pettoai.netlify.app/images/pet_cat.png',
           theme:       { color: '#F17720' },
           handler: async function(response) {
             await verifyAndUpgrade(token, response);
