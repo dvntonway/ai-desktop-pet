@@ -461,8 +461,30 @@
       <button class="pay-btn" id="pay-signin-btn" onclick="signInAndPay()">Continue to Payment →</button>
       <div class="pay-error" id="pay-auth-error"></div>
       <p class="pay-note">
-        New to Petto? <a href="login.html">Create an account</a><br>
-        Signed up with Google? <a href="login.html">Sign in via browser</a>
+        New to Petto? <a href="#" onclick="showCard('pay-signup-card');return false">Create an account</a><br>
+        Signed up with Google? <a href="#" onclick="googleSignIn();return false">Sign in via browser</a>
+      </p>
+    </div>
+
+    <!-- Sign-up card -->
+    <div class="pay-card" id="pay-signup-card" style="display:none">
+      <button class="pay-close" onclick="closePayOverlay()" aria-label="Close">×</button>
+      <div class="pay-logo">🐱</div>
+      <h2>Create your account</h2>
+      <p class="pay-sub">Sign up for Petto, then complete<br>your Pro upgrade.</p>
+      <div class="pay-field">
+        <input type="email"    id="pay-signup-email"    placeholder="Email address"        autocomplete="email" />
+      </div>
+      <div class="pay-field">
+        <input type="password" id="pay-signup-password" placeholder="Password (min 6 chars)" autocomplete="new-password" />
+      </div>
+      <div class="pay-field">
+        <input type="password" id="pay-signup-confirm"  placeholder="Confirm password"     autocomplete="new-password" />
+      </div>
+      <button class="pay-btn" id="pay-signup-btn" onclick="signUp()">Create Account &amp; Pay →</button>
+      <div class="pay-error" id="pay-signup-error"></div>
+      <p class="pay-note">Already have an account?
+        <a href="#" onclick="showCard('pay-auth-card');return false">Sign in</a>
       </p>
     </div>
 
@@ -501,7 +523,7 @@
 
     // ── Overlay helpers ───────────────────────────────────────────────────────
     function showCard(id) {
-      ['pay-auth-card', 'pay-success-card'].forEach(cid => {
+      ['pay-auth-card', 'pay-signup-card', 'pay-success-card'].forEach(cid => {
         document.getElementById(cid).style.display = cid === id ? 'block' : 'none';
       });
       document.getElementById('pay-overlay').classList.add('open');
@@ -643,11 +665,81 @@
       }
     }
 
-    // ── Enter key submits sign-in form ────────────────────────────────────────
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && document.getElementById('pay-auth-card').style.display !== 'none') {
-        signInAndPay();
+    // ── Sign up ───────────────────────────────────────────────────────────────
+    async function signUp() {
+      const email    = document.getElementById('pay-signup-email').value.trim();
+      const password = document.getElementById('pay-signup-password').value;
+      const confirm  = document.getElementById('pay-signup-confirm').value;
+      const errorEl  = document.getElementById('pay-signup-error');
+      const btn      = document.getElementById('pay-signup-btn');
+
+      errorEl.style.color = '#ff8080';
+      errorEl.textContent = '';
+
+      if (!email || !password || !confirm) { errorEl.textContent = 'Please fill in all fields.'; return; }
+      if (password.length < 6)             { errorEl.textContent = 'Password must be at least 6 characters.'; return; }
+      if (password !== confirm)            { errorEl.textContent = 'Passwords do not match.'; return; }
+
+      btn.disabled    = true;
+      btn.textContent = 'Creating account…';
+
+      try {
+        const res  = await fetch(`${SUPA_URL}/auth/v1/signup`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPA_ANON },
+          body:    JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) { errorEl.textContent = data.error_description || 'Sign up failed.'; return; }
+
+        if (data.access_token) {
+          // Email confirmations disabled — proceed straight to payment
+          saveWebSession(data);
+          await initiatePayment(data.access_token);
+        } else {
+          // Email confirmation required — tell the user to confirm then sign in
+          errorEl.style.color = '#80e0a0';
+          errorEl.textContent = '✓ Check your inbox to confirm your email, then sign in.';
+        }
+      } catch {
+        errorEl.textContent = 'Network error. Please try again.';
+      } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Create Account & Pay →';
       }
+    }
+
+    // ── Google OAuth ──────────────────────────────────────────────────────────
+    // Set a flag in sessionStorage so callback.html knows to return here after auth
+    // (sessionStorage persists across cross-origin navigation within the same tab)
+    function googleSignIn() {
+      sessionStorage.setItem('petto_pay_intent', '1');
+      const callbackUrl = 'https://dvntonway.github.io/ai-desktop-pet/ai-pet-website/callback.html';
+      window.location.href = `${SUPA_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(callbackUrl)}`;
+    }
+
+    // ── Auto-trigger payment when redirected back from callback.html ──────────
+    window.addEventListener('DOMContentLoaded', () => {
+      if (new URLSearchParams(location.search).get('pay') === '1') {
+        const session = getWebSession();
+        // Clean up the URL param so a page refresh doesn't re-trigger
+        history.replaceState(null, '', location.pathname + '#pricing');
+        if (session?.access_token) {
+          document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+          setTimeout(() => initiatePayment(session.access_token), 700);
+        } else {
+          // Session missing — show sign-in modal
+          document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+          setTimeout(() => showCard('pay-auth-card'), 700);
+        }
+      }
+    });
+
+    // ── Enter key submits whichever form is visible ───────────────────────────
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      if (document.getElementById('pay-auth-card').style.display   !== 'none') signInAndPay();
+      if (document.getElementById('pay-signup-card').style.display !== 'none') signUp();
     });
   </script>
 </body>

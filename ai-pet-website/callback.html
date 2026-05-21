@@ -88,6 +88,35 @@
   if (!accessToken || !refreshToken) {
     fail('No session tokens found in the callback URL.');
   } else {
+    // ── Always persist session for the website payment flow ──────────────────
+    // Both the desktop app and the web payment flow share callback.html.
+    // Storing here means a signed-in browser user can pay without re-entering
+    // credentials, and the desktop app flow is unaffected.
+    try {
+      localStorage.setItem('petto_web_session', JSON.stringify({
+        access_token:  accessToken,
+        refresh_token: refreshToken,
+      }));
+    } catch { /* private-browsing may block writes — ignore */ }
+
+    // ── Web payment intent: return to pricing page ────────────────────────────
+    // googleSignIn() in index.html sets this flag before redirecting to Google
+    // OAuth. sessionStorage persists across cross-origin navigation within the
+    // same tab, so the flag is readable here after the OAuth round-trip.
+    const payIntent = sessionStorage.getItem('petto_pay_intent');
+    if (payIntent) {
+      sessionStorage.removeItem('petto_pay_intent');
+      document.getElementById('heading').textContent = 'Signed in! Returning…';
+      document.getElementById('sub').textContent     = 'Taking you back to complete your upgrade.';
+      // Short delay so the user sees the confirmation before the redirect
+      setTimeout(() => {
+        window.location.href =
+          'https://dvntonway.github.io/ai-desktop-pet/ai-pet-website/index.html?pay=1';
+      }, 800);
+      return;
+    }
+
+    // ── Desktop app flow: relay tokens to petto:// ────────────────────────────
     // Build the petto:// URL using *query params* (not hash).
     // Hash fragments are stripped by some browsers before invoking a protocol
     // handler, but query params survive intact and are forwarded to the Electron
