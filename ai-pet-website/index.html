@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 
 <body>
@@ -316,7 +317,7 @@
         <div class="plan-card plan-card-pro" id="plan-pro">
           <div class="plan-most-popular">Most Popular</div>
           <div class="plan-name">Pro</div>
-          <div class="plan-price">$4.99<span class="plan-period"> / month</span></div>
+          <div class="plan-price">₹499<span class="plan-period"> / month</span></div>
           <p class="plan-desc">For those who want the full judgment experience. All pets. No mercy.</p>
           <ul class="plan-features">
             <li>✓ 150 reactions per day</li>
@@ -326,8 +327,7 @@
             <li>✓ Priority support</li>
             <li>✓ Early access to new pets</li>
           </ul>
-          <a href="mailto:dvntonway@gmail.com?subject=Petto%20Pro"
-            class="btn-plan btn-plan-pro">Get Pro →</a>
+          <button class="btn-plan btn-plan-pro" onclick="startProUpgrade()">Get Pro →</button>
         </div>
 
       </div>
@@ -359,6 +359,297 @@
   </footer>
 
   <script src="script.js"></script>
+
+  <!-- ======================================================
+       PAYMENT MODAL — styles, markup, and JS are self-contained
+       here so the payment feature doesn't touch the rest of the
+       codebase.
+  ======================================================= -->
+  <style>
+    /* ── Overlay ── */
+    #pay-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(5px);
+      display: none; align-items: center; justify-content: center;
+    }
+    #pay-overlay.open { display: flex; }
+
+    /* ── Card ── */
+    .pay-card {
+      background: #1a1b2e;
+      border-radius: 20px;
+      padding: 40px 36px 32px;
+      width: 100%; max-width: 400px;
+      margin: 16px;
+      position: relative;
+      box-shadow: 0 24px 72px rgba(0,0,0,0.65);
+      color: #e8e8f0;
+      font-family: 'Inter', system-ui, sans-serif;
+      animation: paySlideUp 0.22s ease;
+    }
+    @keyframes paySlideUp {
+      from { transform: translateY(24px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    .pay-close {
+      position: absolute; top: 14px; right: 18px;
+      background: none; border: none;
+      color: #666; font-size: 22px; line-height: 1;
+      cursor: pointer; transition: color 0.15s;
+    }
+    .pay-close:hover { color: #aaa; }
+
+    /* ── Content ── */
+    .pay-logo  { font-size: 48px; text-align: center; line-height: 1; margin-bottom: 10px; }
+    .pay-card h2 { text-align: center; font-size: 20px; font-weight: 700; letter-spacing: -.4px; margin-bottom: 5px; }
+    .pay-card .pay-sub { text-align: center; color: #a0a0c0; font-size: 13px; margin-bottom: 24px; line-height: 1.5; }
+
+    /* ── Form ── */
+    .pay-field { margin-bottom: 13px; }
+    .pay-field input {
+      width: 100%; padding: 11px 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(255,255,255,0.10);
+      border-radius: 10px;
+      color: #e8e8f0; font-family: inherit; font-size: 14px;
+      outline: none; transition: border-color 0.15s;
+      box-sizing: border-box;
+    }
+    .pay-field input:focus { border-color: #F17720; }
+    .pay-field input::placeholder { color: rgba(255,255,255,0.22); }
+
+    /* ── Button ── */
+    .pay-btn {
+      width: 100%; background: #F17720; color: #fff;
+      border: none; border-radius: 12px;
+      padding: 13px; font-family: inherit;
+      font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: opacity 0.15s; margin-top: 2px;
+    }
+    .pay-btn:hover   { opacity: 0.88; }
+    .pay-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .pay-note { text-align: center; font-size: 12px; color: #666; margin-top: 14px; }
+    .pay-note a { color: #F17720; text-decoration: none; }
+
+    .pay-error {
+      color: #ff8080; font-size: 13px;
+      text-align: center; margin-top: 10px; min-height: 18px;
+    }
+
+    /* ── Success ── */
+    .pay-success-icon { font-size: 56px; text-align: center; margin-bottom: 10px; }
+    .pay-success-detail { text-align: center; color: #a0a0c0; font-size: 13px; margin-bottom: 24px; line-height: 1.6; }
+  </style>
+
+  <!-- Overlay -->
+  <div id="pay-overlay" onclick="payOverlayClick(event)">
+
+    <!-- Sign-in card (shown when not authenticated) -->
+    <div class="pay-card" id="pay-auth-card" style="display:none">
+      <button class="pay-close" onclick="closePayOverlay()" aria-label="Close">×</button>
+      <div class="pay-logo">🐱</div>
+      <h2>Sign in to upgrade</h2>
+      <p class="pay-sub">Use your Petto account — the same one<br>you use in the desktop app.</p>
+      <div class="pay-field">
+        <input type="email" id="pay-email" placeholder="Email address" autocomplete="email" />
+      </div>
+      <div class="pay-field">
+        <input type="password" id="pay-password" placeholder="Password" autocomplete="current-password" />
+      </div>
+      <button class="pay-btn" id="pay-signin-btn" onclick="signInAndPay()">Continue to Payment →</button>
+      <div class="pay-error" id="pay-auth-error"></div>
+      <p class="pay-note">
+        New to Petto? <a href="login.html">Create an account</a><br>
+        Signed up with Google? <a href="login.html">Sign in via browser</a>
+      </p>
+    </div>
+
+    <!-- Success card -->
+    <div class="pay-card" id="pay-success-card" style="display:none">
+      <div class="pay-success-icon">🎉</div>
+      <h2>You're Pro!</h2>
+      <p class="pay-success-detail">
+        Your account has been upgraded to Pro.<br>
+        Relaunch the Petto desktop app to unlock<br>
+        all 5 pets and 150 reactions per day.
+      </p>
+      <button class="pay-btn" onclick="closePayOverlay()">Awesome, let's go!</button>
+    </div>
+
+  </div>
+
+  <script>
+    // ── Config ────────────────────────────────────────────────────────────────
+    const SUPA_URL  = 'https://vbeujywkmrzldmvznojd.supabase.co';
+    const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZiZXVqeXdrbXJ6bGRtdnpub2pkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjY5MjMsImV4cCI6MjA5NDYwMjkyM30.hZM1Vk5fIXz2zgShr4qnUiRjcLwbAJD1duEGjnexCzQ';
+    const EDGE_URL  = `${SUPA_URL}/functions/v1`;
+    const WEB_SESSION_KEY = 'petto_web_session';
+
+    // ── Session helpers ───────────────────────────────────────────────────────
+    function getWebSession() {
+      try { return JSON.parse(localStorage.getItem(WEB_SESSION_KEY) || 'null'); }
+      catch { return null; }
+    }
+    function saveWebSession(data) {
+      localStorage.setItem(WEB_SESSION_KEY, JSON.stringify({
+        access_token:  data.access_token,
+        refresh_token: data.refresh_token,
+      }));
+    }
+
+    // ── Overlay helpers ───────────────────────────────────────────────────────
+    function showCard(id) {
+      ['pay-auth-card', 'pay-success-card'].forEach(cid => {
+        document.getElementById(cid).style.display = cid === id ? 'block' : 'none';
+      });
+      document.getElementById('pay-overlay').classList.add('open');
+    }
+    function closePayOverlay() {
+      document.getElementById('pay-overlay').classList.remove('open');
+    }
+    function payOverlayClick(e) {
+      if (e.target === document.getElementById('pay-overlay')) closePayOverlay();
+    }
+
+    // ── Entry point: "Get Pro →" button ───────────────────────────────────────
+    async function startProUpgrade() {
+      const session = getWebSession();
+      if (session?.access_token) {
+        await initiatePayment(session.access_token);
+      } else {
+        showCard('pay-auth-card');
+        document.getElementById('pay-auth-error').textContent = '';
+        document.getElementById('pay-email').value    = '';
+        document.getElementById('pay-password').value = '';
+      }
+    }
+
+    // ── Sign in then pay ──────────────────────────────────────────────────────
+    async function signInAndPay() {
+      const email    = document.getElementById('pay-email').value.trim();
+      const password = document.getElementById('pay-password').value;
+      const errorEl  = document.getElementById('pay-auth-error');
+      const btn      = document.getElementById('pay-signin-btn');
+
+      errorEl.textContent = '';
+      if (!email || !password) { errorEl.textContent = 'Please enter your email and password.'; return; }
+
+      btn.disabled    = true;
+      btn.textContent = 'Signing in…';
+
+      try {
+        const res  = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPA_ANON },
+          body:    JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) { errorEl.textContent = data.error_description || 'Sign in failed — check your credentials.'; return; }
+
+        saveWebSession(data);
+        await initiatePayment(data.access_token);
+      } catch {
+        errorEl.textContent = 'Network error. Please try again.';
+      } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Continue to Payment →';
+      }
+    }
+
+    // ── Create Razorpay order → open checkout ─────────────────────────────────
+    async function initiatePayment(token) {
+      try {
+        const res = await fetch(`${EDGE_URL}/create-order`, {
+          method:  'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'apikey': SUPA_ANON,
+          },
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          // Token expired — clear session and ask to re-login
+          if (res.status === 401) {
+            localStorage.removeItem(WEB_SESSION_KEY);
+            showCard('pay-auth-card');
+            document.getElementById('pay-auth-error').textContent = 'Session expired — please sign in again.';
+            return;
+          }
+          alert('Could not start payment: ' + (err.error || 'Unknown error'));
+          return;
+        }
+
+        const { order_id, amount, currency, key_id } = await res.json();
+
+        const options = {
+          key:        key_id,
+          amount,
+          currency,
+          order_id,
+          name:        'Petto',
+          description: 'Pro Plan — ₹499 / month',
+          image:       'https://dvntonway.github.io/ai-desktop-pet/ai-pet-website/images/pet_cat.png',
+          theme:       { color: '#F17720' },
+          handler: async function(response) {
+            await verifyAndUpgrade(token, response);
+          },
+          modal: {
+            ondismiss: function() { /* user closed checkout */ },
+          },
+        };
+
+        // Close auth modal before Razorpay opens (avoids z-index fights)
+        closePayOverlay();
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+
+      } catch (e) {
+        console.error(e);
+        alert('Could not initialise payment. Please try again.');
+      }
+    }
+
+    // ── Verify payment signature → upgrade profile ────────────────────────────
+    async function verifyAndUpgrade(token, paymentResponse) {
+      try {
+        const res = await fetch(`${EDGE_URL}/verify-payment`, {
+          method:  'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'apikey': SUPA_ANON,
+          },
+          body: JSON.stringify({
+            razorpay_order_id:   paymentResponse.razorpay_order_id,
+            razorpay_payment_id: paymentResponse.razorpay_payment_id,
+            razorpay_signature:  paymentResponse.razorpay_signature,
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          alert('Payment verification failed: ' + (err.error || 'Please contact support at dvntonway@gmail.com'));
+          return;
+        }
+
+        showCard('pay-success-card');
+      } catch (e) {
+        console.error(e);
+        alert('Could not verify payment. Please contact dvntonway@gmail.com with your payment ID.');
+      }
+    }
+
+    // ── Enter key submits sign-in form ────────────────────────────────────────
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && document.getElementById('pay-auth-card').style.display !== 'none') {
+        signInAndPay();
+      }
+    });
+  </script>
 </body>
 
 </html>
