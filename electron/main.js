@@ -283,6 +283,19 @@ function createWindow() {
 
   win.setAlwaysOnTop(true, 'screen-saver');
 
+  // Right-click on the pet window: the whole window uses -webkit-app-region:drag,
+  // so Chromium swallows the contextmenu event before it reaches the renderer.
+  // WM_NCRBUTTONUP (0x00A5) is the OS-level message fired when the right mouse
+  // button is released on a non-client (draggable) area — hooking it here gives
+  // us a reliable right-click signal that bypasses the drag-region intercept.
+  if (process.platform === 'win32') {
+    win.hookWindowMessage(0x00A5 /* WM_NCRBUTTONUP */, () => {
+      if (win && !win.isDestroyed()) {
+        Menu.buildFromTemplate(buildMenuTemplate()).popup({ window: win });
+      }
+    });
+  }
+
   if (isDev) {
     win.loadURL('http://localhost:5173');
   } else {
@@ -293,7 +306,9 @@ function createWindow() {
 // ---------------------------------------------------------------------------
 // Tray
 // ---------------------------------------------------------------------------
-function updateTrayMenu() {
+
+// Shared menu template — used by both the tray and the window right-click menu.
+function buildMenuTemplate() {
   const allowed = (TIER_LIMITS[currentTier] ?? TIER_LIMITS.free).pets;
 
   const petItems = ALL_PETS.map(p => {
@@ -312,7 +327,7 @@ function updateTrayMenu() {
     };
   });
 
-  tray.setContextMenu(Menu.buildFromTemplate([
+  return [
     {
       label: (win && !win.isDestroyed() && win.isVisible()) ? 'Hide Pet' : 'Show Pet',
       click: () => {
@@ -328,7 +343,11 @@ function updateTrayMenu() {
     ...petItems,
     { type: 'separator' },
     { label: 'Quit', click: () => app.quit() },
-  ]));
+  ];
+}
+
+function updateTrayMenu() {
+  tray.setContextMenu(Menu.buildFromTemplate(buildMenuTemplate()));
 }
 
 function createTray() {
