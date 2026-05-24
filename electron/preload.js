@@ -22,4 +22,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Fires whenever the user switches pets from the tray menu
   onPetChanged: (callback) => ipcRenderer.on('pet-changed', (_, petId) => callback(petId)),
+
+  // Show the custom context menu at the current cursor position
+  showContextMenu: () => ipcRenderer.send('show-context-menu'),
+
+  // Move the window by a delta (used by manual drag implementation)
+  moveWindowBy: (dx, dy) => ipcRenderer.send('move-window-by', dx, dy),
+
+  // Fires when the user toggles Shut Up from the tray/context menu
+  onShutUpChanged: (cb) => ipcRenderer.on('shut-up-changed', (_, on) => cb(on)),
+
+  // Fires each tick while Shut Up is active — carries a pre-chosen random emotion
+  onQuietTick: (cb) => ipcRenderer.on('quiet-tick', (_, emotion) => cb(emotion)),
+
+  // Fires once per day when 50 reactions remain — carries the warning message
+  onLowReactions: (cb) => ipcRenderer.on('low-reactions', (_, msg) => cb(msg)),
+
+  // Fires when a new version has been downloaded and is ready to install on quit
+  onUpdateReady: (cb) => ipcRenderer.on('update-ready', (_, version) => cb(version)),
 });

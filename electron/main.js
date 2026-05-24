@@ -1,5 +1,7 @@
-const path = require('path');
-const fs   = require('fs');
+const path   = require('path');
+const fs     = require('fs');
+const os     = require('os');
+const crypto = require('crypto');
 
 // Load .env without dotenv — works in both dev and packaged builds.
 // Dev:       ../relative to electron/ == project root
@@ -22,13 +24,14 @@ for (const envPath of [
 
 const {
   app, BrowserWindow, Tray, Menu, screen,
-  nativeImage, ipcMain, desktopCapturer,
+  nativeImage, ipcMain, desktopCapturer, shell,
 } = require('electron');
-const { deflateSync } = require('zlib');
+const { autoUpdater } = require('electron-updater');
 
 const isDev = process.argv.includes('--dev');
-const WIN_W = 200;
-const WIN_H = 250;
+const WIN_W      = 200;
+const WIN_H      = 250;
+const WIN_H_GHOST = 290; // ghost SVG is taller to keep mouth inside the body
 
 let tray = null;
 let win  = null;
@@ -47,13 +50,21 @@ const SETTINGS_FILE = path.join(USER_DATA, 'petto-settings.json');
 const SUPA_URL  = process.env.SUPABASE_URL      || 'https://vbeujywkmrzldmvznojd.supabase.co';
 const SUPA_ANON = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZiZXVqeXdrbXJ6bGRtdnpub2pkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjY5MjMsImV4cCI6MjA5NDYwMjkyM30.hZM1Vk5fIXz2zgShr4qnUiRjcLwbAJD1duEGjnexCzQ';
 
+// Stable device fingerprint — sent with every judge call so the server can
+// detect multi-account trial abuse on the same machine.
+// SHA-256(hostname::username) truncated to 32 hex chars (128-bit).
+const DEVICE_ID = crypto.createHash('sha256')
+  .update(`${os.hostname()}::${os.userInfo().username}`)
+  .digest('hex')
+  .slice(0, 32);
+
 // ---------------------------------------------------------------------------
 // Tier config
 // ---------------------------------------------------------------------------
-const TIER_LIMITS = {
-  pro:  { daily: 150, pets: ['cat', 'monkey', 'dog', 'fox', 'ghost'] },
-  free: { daily: 50,  pets: ['cat', 'monkey'] },
-};
+// All active users (trial or pro) share the same limits.
+// Trial = first 24 h after signup; Pro = paid subscriber.
+const ACTIVE_LIMIT = 150;
+const ALL_PETS_IDS = ['cat', 'monkey', 'dog', 'fox', 'ghost'];
 
 const ALL_PETS = [
   { id: 'cat',    label: '🐱 Cat' },
@@ -64,8 +75,12 @@ const ALL_PETS = [
 ];
 
 // In-memory tier + active-pet state (loaded/refreshed on launch)
-let currentTier = 'free';
-let activePet   = 'cat';
+let currentTier   = 'trial'; // 'trial' | 'pro'
+let trialExpired  = false;   // true once the 24 h window closes without upgrade
+let deviceBlocked = false;   // true if device hit the multi-account trial limit (session-only)
+let activePet     = 'cat';
+let shutUpMode    = false;   // when true, skip API and cycle random emotions silently
+let warned50Date  = null;    // tracks which calendar day the 50-remaining warning fired
 
 // ---------------------------------------------------------------------------
 // File I/O helpers
@@ -105,14 +120,19 @@ function incrementUsage() {
 // Settings (active pet selection)
 // ---------------------------------------------------------------------------
 function loadSettings() {
-  const s = readJson(SETTINGS_FILE, {});
-  // Saved pet might be invalid for the current tier — fall back to cat
-  const allowed = (TIER_LIMITS[currentTier] ?? TIER_LIMITS.free).pets;
-  activePet = allowed.includes(s.active_pet) ? s.active_pet : 'cat';
+  const s      = readJson(SETTINGS_FILE, {});
+  activePet  = ALL_PETS_IDS.includes(s.active_pet) ? s.active_pet : 'cat';
+  shutUpMode = s.shut_up ?? false;
+  // trialExpired is NOT loaded from disk — trial status is authoritative in
+  // Supabase (profiles.trial_started_at). The flag is session-only so that
+  // signing out and back in re-evaluates against the server on the next tick.
 }
 
 function saveSettings() {
-  writeJson(SETTINGS_FILE, { active_pet: activePet });
+  writeJson(SETTINGS_FILE, {
+    active_pet: activePet,
+    shut_up:    shutUpMode,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -131,32 +151,34 @@ async function fetchTierFromSupabase(access_token) {
 }
 
 // Called on every launch (and after a successful deep-link login).
-// Fetches tier from Supabase, validates the active pet, then refreshes the tray.
+// Fetches tier from Supabase and refreshes the tray.
 async function refreshTier() {
   const auth = getAuth();
   if (!auth?.access_token) {
-    currentTier = 'free';
+    currentTier = 'trial';
     updateTrayMenu();
     return;
   }
   try {
     const tier = await fetchTierFromSupabase(auth.access_token);
-    if (tier) {
-      currentTier = tier;
-      console.log(`[tier] fetched: ${tier}`);
+    if (tier === 'pro') {
+      currentTier = 'pro';
+      // Clear any blocking flags now that the user has upgraded.
+      if (trialExpired) {
+        trialExpired = false;
+        console.log('[tier] upgraded to Pro — trial-expired flag cleared');
+      }
+      if (deviceBlocked) {
+        deviceBlocked = false;
+        console.log('[tier] upgraded to Pro — device-blocked flag cleared');
+      }
+    } else {
+      currentTier = 'trial';
     }
+    console.log(`[tier] fetched: ${tier} → currentTier: ${currentTier}`);
   } catch (e) {
-    console.log('[tier] fetch failed — keeping free tier:', e.message);
+    console.log('[tier] fetch failed — keeping current tier:', e.message);
   }
-
-  // If the saved pet is no longer allowed after a tier downgrade, reset it
-  const allowed = (TIER_LIMITS[currentTier] ?? TIER_LIMITS.free).pets;
-  if (!allowed.includes(activePet)) {
-    activePet = 'cat';
-    saveSettings();
-    if (win && !win.isDestroyed()) win.webContents.send('pet-changed', 'cat');
-  }
-
   updateTrayMenu();
 }
 
@@ -175,8 +197,14 @@ if (process.defaultApp) {
 function handleDeepLink(url) {
   try {
     const u = new URL(url);
-    const access_token  = u.searchParams.get('access_token');
-    const refresh_token = u.searchParams.get('refresh_token');
+    // The login page sends tokens as a hash fragment:
+    //   petto://auth/callback#access_token=...&refresh_token=...
+    // Fall back to query params for any future flows that use ?access_token=...
+    const params = (u.hash && u.hash.length > 1)
+      ? new URLSearchParams(u.hash.slice(1))
+      : u.searchParams;
+    const access_token  = params.get('access_token');
+    const refresh_token = params.get('refresh_token');
     if (access_token && refresh_token) {
       saveAuth({ access_token, refresh_token });
       console.log('[auth] session stored via deep link');
@@ -206,59 +234,18 @@ app.on('open-url', (event, url) => {
   handleDeepLink(url);
 });
 
-// ---------------------------------------------------------------------------
-// Tray icon: generate a 16x16 white circle PNG in pure JS (no asset files)
-// ---------------------------------------------------------------------------
-function crc32(buf) {
-  let crc = 0xffffffff;
-  for (const byte of buf) {
-    crc ^= byte;
-    for (let i = 0; i < 8; i++) {
-      crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
-    }
-  }
-  return (crc ^ 0xffffffff) >>> 0;
-}
-
-function pngChunk(type, data) {
-  const typeBuf = Buffer.from(type, 'ascii');
-  const lenBuf  = Buffer.alloc(4);
-  lenBuf.writeUInt32BE(data.length);
-  const crcBuf  = Buffer.alloc(4);
-  crcBuf.writeUInt32BE(crc32(Buffer.concat([typeBuf, data])));
-  return Buffer.concat([lenBuf, typeBuf, data, crcBuf]);
-}
 
 function createTrayIcon() {
-  const size = 16;
-  const sig  = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(size, 0);
-  ihdr.writeUInt32BE(size, 4);
-  ihdr[8] = 8; // bit depth
-  ihdr[9] = 6; // RGBA
-
-  const cx = size / 2 - 0.5;
-  const cy = size / 2 - 0.5;
-  const r  = size / 2 - 1;
-  const rowLen = 1 + size * 4;
-  const raw    = Buffer.alloc(size * rowLen, 0);
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const inside = (x - cx) ** 2 + (y - cy) ** 2 <= r ** 2;
-      const i = y * rowLen + 1 + x * 4;
-      raw[i] = 255; raw[i + 1] = 255; raw[i + 2] = 255;
-      raw[i + 3] = inside ? 255 : 0;
-    }
+  // Dev:      electron/__dirname/../build/icon.png  (source tree)
+  // Packaged: process.resourcesPath/icon.png        (extraResources target)
+  const iconPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'icon.png')
+    : path.join(__dirname, '../build/icon.png');
+  const img = nativeImage.createFromPath(iconPath);
+  if (img.isEmpty()) {
+    console.warn('createTrayIcon: icon file missing or unreadable at', iconPath);
   }
-
-  return nativeImage.createFromBuffer(Buffer.concat([
-    sig,
-    pngChunk('IHDR', ihdr),
-    pngChunk('IDAT', deflateSync(raw)),
-    pngChunk('IEND', Buffer.alloc(0)),
-  ]));
+  return img;
 }
 
 // ---------------------------------------------------------------------------
@@ -266,11 +253,12 @@ function createTrayIcon() {
 // ---------------------------------------------------------------------------
 function createWindow() {
   const { workArea } = screen.getPrimaryDisplay();
+  const h = activePet === 'ghost' ? WIN_H_GHOST : WIN_H;
   const x = workArea.x + workArea.width  - WIN_W;
-  const y = workArea.y + workArea.height - WIN_H;
+  const y = workArea.y + workArea.height - h;
 
   win = new BrowserWindow({
-    width: WIN_W, height: WIN_H, x, y,
+    width: WIN_W, height: h, x, y,
     transparent: true, frame: false,
     alwaysOnTop: true, skipTaskbar: true,
     resizable: false, maximizable: false, minimizable: false,
@@ -283,24 +271,22 @@ function createWindow() {
 
   win.setAlwaysOnTop(true, 'screen-saver');
 
-  // Right-click on the pet window: the whole window uses -webkit-app-region:drag,
-  // so Chromium swallows the contextmenu event before it reaches the renderer.
-  // WM_NCRBUTTONUP (0x00A5) is the OS-level message fired when the right mouse
-  // button is released on a non-client (draggable) area — hooking it here gives
-  // us a reliable right-click signal that bypasses the drag-region intercept.
-  if (process.platform === 'win32') {
-    win.hookWindowMessage(0x00A5 /* WM_NCRBUTTONUP */, () => {
-      if (win && !win.isDestroyed()) {
-        Menu.buildFromTemplate(buildMenuTemplate()).popup({ window: win });
-      }
-    });
-  }
-
   if (isDev) {
-    win.loadURL('http://localhost:5173');
+    win.loadURL('http://localhost:5174');
   } else {
     win.loadFile(path.join(__dirname, '../dist-renderer/index.html'));
   }
+}
+
+// Resize the window (and keep it anchored to the bottom-right corner) whenever
+// the user switches between ghost (290 px tall) and any other pet (250 px tall).
+function applyPetWindowSize() {
+  if (!win || win.isDestroyed()) return;
+  const h = activePet === 'ghost' ? WIN_H_GHOST : WIN_H;
+  const { workArea } = screen.getPrimaryDisplay();
+  const [x] = win.getPosition();
+  const y = Math.max(workArea.y, workArea.y + workArea.height - h);
+  win.setBounds({ x, y, width: WIN_W, height: h }, false);
 }
 
 // ---------------------------------------------------------------------------
@@ -309,23 +295,26 @@ function createWindow() {
 
 // Shared menu template — used by both the tray and the window right-click menu.
 function buildMenuTemplate() {
-  const allowed = (TIER_LIMITS[currentTier] ?? TIER_LIMITS.free).pets;
+  // All active users get every pet; no tier-based locks.
+  const petItems = ALL_PETS.map(p => ({
+    label:   p.label,
+    type:    'checkbox',
+    checked: activePet === p.id,
+    click: () => {
+      activePet = p.id;
+      saveSettings();
+      applyPetWindowSize();
+      if (win && !win.isDestroyed()) win.webContents.send('pet-changed', p.id);
+      updateTrayMenu();
+    },
+  }));
 
-  const petItems = ALL_PETS.map(p => {
-    const isAllowed = allowed.includes(p.id);
-    return {
-      label:   isAllowed ? p.label : `🔒 ${p.label}`,
-      type:    isAllowed ? 'checkbox' : 'normal',
-      checked: isAllowed && activePet === p.id,
-      enabled: isAllowed,
-      click: () => {
-        activePet = p.id;
-        saveSettings();
-        if (win && !win.isDestroyed()) win.webContents.send('pet-changed', p.id);
-        updateTrayMenu();
-      },
-    };
-  });
+  const isSignedIn = !!getAuth()?.access_token;
+  const loginUrl   = `https://pettoai.netlify.app/login.html`
+    + `?supabase_url=${encodeURIComponent(SUPA_URL)}`
+    + `&anon_key=${encodeURIComponent(SUPA_ANON)}`
+    + `&redirect_to=${encodeURIComponent('https://pettoai.netlify.app/callback.html')}`;
+  const upgradeUrl = 'https://pettoai.netlify.app/#pricing';
 
   return [
     {
@@ -338,9 +327,60 @@ function buildMenuTemplate() {
       },
     },
     { type: 'separator' },
-    { label: `Plan: ${currentTier === 'pro' ? 'Pro ✨' : 'Free'}`, enabled: false },
+    // Plan / trial status row
+    ...(deviceBlocked ? [
+      { label: 'Device limit reached', enabled: false },
+      { label: 'Upgrade to Pro →',     click: () => shell.openExternal(upgradeUrl) },
+    ] : trialExpired ? [
+      { label: 'Trial ended',      enabled: false },
+      { label: 'Upgrade to Pro →', click: () => shell.openExternal(upgradeUrl) },
+    ] : [
+      { label: currentTier === 'pro' ? 'Plan: Pro ✨' : 'Plan: Trial', enabled: false },
+    ]),
+    // Auth row
+    ...(!isSignedIn ? [{
+      label: 'Sign In…',
+      click: () => shell.openExternal(loginUrl),
+    }] : [
+      {
+        // Re-fetches tier from Supabase — fixes the case where payment succeeded
+        // but the app didn't receive the update (e.g. no internet at purchase time).
+        label: 'Restore Purchase',
+        click: async () => {
+          console.log('[tier] Restore Purchase — re-fetching tier from Supabase');
+          await refreshTier();
+        },
+      },
+      {
+        label: 'Sign Out',
+        click: () => {
+          const authPath = path.join(app.getPath('userData'), 'petto-auth.json');
+          try { fs.unlinkSync(authPath); } catch {}
+          currentTier   = 'trial';
+          trialExpired  = false; // reset session flags; server re-evaluates on next tick
+          deviceBlocked = false;
+          updateTrayMenu();
+          console.log('[auth] signed out');
+        },
+      },
+    ]),
     { type: 'separator' },
-    ...petItems,
+    {
+      label:   'Shut Up',
+      type:    'checkbox',
+      checked: shutUpMode,
+      click: () => {
+        shutUpMode = !shutUpMode;
+        saveSettings();
+        if (win && !win.isDestroyed()) win.webContents.send('shut-up-changed', shutUpMode);
+        updateTrayMenu();
+      },
+    },
+    // Only show pet picker when the app is fully usable (no blocking state)
+    ...(!trialExpired && !deviceBlocked ? [
+      { type: 'separator' },
+      ...petItems,
+    ] : []),
     { type: 'separator' },
     { label: 'Quit', click: () => app.quit() },
   ];
@@ -352,6 +392,7 @@ function updateTrayMenu() {
 
 function createTray() {
   tray = new Tray(createTrayIcon());
+  console.log('tray created', 'icon empty:', tray.isDestroyed());
   tray.setToolTip('Petto');
   updateTrayMenu();
 
@@ -374,74 +415,123 @@ ipcMain.handle('capture-screen', async () => {
 });
 
 // ---------------------------------------------------------------------------
-// Claude API call — main process only (avoids renderer CORS restrictions)
-// Enforces the tier daily limit here (server-side; renderer can't bypass it).
+// AI judgement — proxied through the Supabase Edge Function "judge".
+// Anthropic key, rate-limiting, and tier enforcement all live server-side.
 // ---------------------------------------------------------------------------
-const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
-
-const SYSTEM_PROMPT =
-  'You are a witty, judgmental pet living on the user\'s screen. ' +
-  'Look at this screenshot and respond ONLY in valid JSON, no markdown, no backticks: ' +
-  '{ "emotion": one of [happy, judging, shocked, proud, bored, sleeping], ' +
-  '"text": one short witty line max 8 words about what the user is doing, ' +
-  '"incognito": false } ' +
-  'or if you see an incognito/private browser window: { "incognito": true }';
+const JUDGE_URL = `${SUPA_URL}/functions/v1/judge`;
 
 ipcMain.handle('call-claude', async (_, base64Jpeg) => {
-  // Check daily reaction limit before hitting the API
-  const usage = getUsage();
-  const limit = (TIER_LIMITS[currentTier] ?? TIER_LIMITS.free).daily;
-  if (usage.count >= limit) {
-    const msg = currentTier === 'pro'
-      ? `${limit} reactions used today. Back tomorrow!`
-      : `Free limit (${limit}/day) reached. Upgrade to Pro for 3×!`;
-    return JSON.stringify({ emotion: 'sleeping', text: msg, incognito: false });
+  // If trial already confirmed expired this session, skip the network call.
+  if (trialExpired) {
+    return JSON.stringify({
+      emotion: 'sleeping',
+      text: 'Your free trial has ended. Upgrade to Pro to wake me up 🐾',
+      incognito: false,
+    });
   }
-  incrementUsage();
 
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) throw new Error('ANTHROPIC_API_KEY not set');
+  // If this device was already flagged for multi-account abuse this session, skip.
+  if (deviceBlocked) {
+    return JSON.stringify({
+      emotion: 'sleeping',
+      text: 'Upgrade to Pro to continue 🐾',
+      incognito: false,
+    });
+  }
 
-  const res = await fetch(ANTHROPIC_URL, {
+  // Edge function requires a signed-in user (verify_jwt: true).
+  const auth = getAuth();
+  if (!auth?.access_token) {
+    return JSON.stringify({ emotion: 'sleeping', text: 'Sign in to wake me up!', incognito: false });
+  }
+
+  // Client-side daily limit check — keeps the tray counter accurate without a round-trip.
+  const usage = getUsage();
+  if (usage.count >= ACTIVE_LIMIT) {
+    return JSON.stringify({
+      emotion: 'sleeping',
+      text: `${ACTIVE_LIMIT} reactions used today. Back tomorrow!`,
+      incognito: false,
+    });
+  }
+
+  const newCount  = incrementUsage();
+  const remaining = ACTIVE_LIMIT - newCount;
+
+  // One-time warning when exactly 50 reactions remain for the day.
+  if (remaining === 50 && warned50Date !== todayStr()) {
+    warned50Date = todayStr();
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('low-reactions', "I'm getting tired... I have 50 reactions left today 😴");
+    }
+  }
+
+  console.log(`[call-claude] tier=${currentTier} trialExpired=${trialExpired} deviceBlocked=${deviceBlocked} usage=${newCount}/${ACTIVE_LIMIT} → calling judge`);
+
+  const res = await fetch(JUDGE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
+      'apikey':        SUPA_ANON,
+      'Authorization': `Bearer ${auth.access_token}`,
     },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 256,
-      system: SYSTEM_PROMPT,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64Jpeg } },
-          { type: 'text', text: 'What is the user doing on their screen?' },
-        ],
-      }],
-    }),
+    body: JSON.stringify({ image: base64Jpeg, deviceId: DEVICE_ID }),
   });
+
+  // 403 can mean trial expired or device blocked — read the body to distinguish.
+  if (res.status === 403) {
+    const body = await res.json().catch(() => ({}));
+    if (body.trialExpired) {
+      trialExpired = true;  // session-only; not written to disk
+      updateTrayMenu();
+      console.log('[trial] expired — server confirmed via profiles.trial_started_at');
+      return JSON.stringify({
+        emotion: 'sleeping',
+        text: 'Your free trial has ended. Upgrade to Pro to wake me up 🐾',
+        incognito: false,
+      });
+    }
+    if (body.deviceBlocked) {
+      deviceBlocked = true;  // session-only; not written to disk
+      updateTrayMenu();
+      console.log('[device] blocked — too many trial accounts on this device within 7 days');
+      return JSON.stringify({
+        emotion: 'sleeping',
+        text: 'Upgrade to Pro to continue 🐾',
+        incognito: false,
+      });
+    }
+  }
+
+  // Server-side daily limit hit (client counter out of sync).
+  if (res.status === 429) {
+    return JSON.stringify({
+      emotion: 'sleeping',
+      text: `${ACTIVE_LIMIT} reactions used today. Back tomorrow!`,
+      incognito: false,
+    });
+  }
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(`Anthropic ${res.status}: ${body.error?.message ?? res.statusText}`);
+    throw new Error(`judge ${res.status}: ${body.error ?? res.statusText}`);
   }
 
-  const data = await res.json();
-  const text = data.content?.[0]?.text;
-  if (!text) throw new Error('unexpected Anthropic response shape');
-  return text;
+  // Edge function returns the final JSON directly — pass the raw text back
+  // so the renderer can parse it exactly as it did with the Anthropic response.
+  return res.text();
 });
 
 // ---------------------------------------------------------------------------
 // IPC: tier info for the renderer
 // ---------------------------------------------------------------------------
 ipcMain.handle('get-tier', () => ({
-  tier:       currentTier,
+  tier:         currentTier,
+  trialExpired,
   activePet,
-  dailyLimit: (TIER_LIMITS[currentTier] ?? TIER_LIMITS.free).daily,
-  usageToday: getUsage().count,
+  shutUp:       shutUpMode,
+  dailyLimit:   ACTIVE_LIMIT,
+  usageToday:   getUsage().count,
 }));
 
 // ---------------------------------------------------------------------------
@@ -459,19 +549,74 @@ ipcMain.on('screenshot-taken', (_, json) => {
   }
 });
 
+// IPC: renderer right-click → show custom menu at the cursor inside the window
+ipcMain.on('show-context-menu', () => {
+  Menu.buildFromTemplate(buildMenuTemplate()).popup({ window: win });
+});
+
+// IPC: manual drag — move the window by (dx, dy) pixels
+ipcMain.on('move-window-by', (_, dx, dy) => {
+  if (!win) return;
+  const [x, y] = win.getPosition();
+  win.setPosition(x + dx, y + dy);
+});
+
 // ---------------------------------------------------------------------------
-// Screenshot loop — ticks every 15 s; renderer does the actual AI call
+// Auto-updater — silently checks GitHub Releases on launch (packaged only).
+// Downloads in the background; installs automatically on next quit.
+// Sends 'update-ready' to the renderer so the pet can show a speech bubble.
 // ---------------------------------------------------------------------------
-const SCREENSHOT_INTERVAL_MS = 15_000;
+function setupAutoUpdater() {
+  autoUpdater.autoDownload        = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('checking-for-update', () =>
+    console.log('[updater] checking for updates…'));
+  autoUpdater.on('update-available', info =>
+    console.log(`[updater] v${info.version} available — downloading`));
+  autoUpdater.on('update-not-available', () =>
+    console.log('[updater] already up to date'));
+  autoUpdater.on('update-downloaded', info => {
+    console.log(`[updater] v${info.version} downloaded — will install on next quit`);
+    if (win && !win.isDestroyed())
+      win.webContents.send('update-ready', info.version);
+  });
+  autoUpdater.on('error', err =>
+    console.log('[updater] error:', err.message));
+
+  autoUpdater.checkForUpdates().catch(err =>
+    console.log('[updater] check failed:', err.message));
+}
+
+// ---------------------------------------------------------------------------
+// Screenshot loop — ticks every 60 s; renderer does the actual AI call.
+// When Shut Up mode is on, skips the API and sends a random emotion instead.
+// ---------------------------------------------------------------------------
+const SCREENSHOT_INTERVAL_MS = 60_000;
+const EMOTIONS = ['happy', 'judging', 'shocked', 'proud', 'bored', 'sleeping'];
+
+function sendTick() {
+  if (!win || win.isDestroyed()) return;
+  if (shutUpMode) {
+    const emotion = EMOTIONS[Math.floor(Math.random() * EMOTIONS.length)];
+    win.webContents.send('quiet-tick', emotion);
+  } else {
+    console.log(`[pet] ${ts()} tick`);
+    win.webContents.send('tick');
+  }
+}
 
 function startScreenshotLoop() {
-  console.log('[pet] screenshot loop started — first tick in 15 s');
-  setInterval(() => {
-    if (win && !win.isDestroyed()) {
-      console.log(`[pet] ${ts()} tick`);
-      win.webContents.send('tick');
-    }
-  }, SCREENSHOT_INTERVAL_MS);
+  // Fire one tick immediately once the renderer has fully loaded so the pet
+  // reacts on startup rather than waiting 60 s for the first interval tick.
+  win.webContents.once('did-finish-load', () => {
+    console.log('[pet] startup tick');
+    sendTick();
+    // Check for updates on every launch (packaged builds only — not in dev)
+    if (!isDev) setupAutoUpdater();
+  });
+  console.log('[pet] screenshot loop started — ticking every 60 s');
+  setInterval(sendTick, SCREENSHOT_INTERVAL_MS);
 }
 
 // ---------------------------------------------------------------------------

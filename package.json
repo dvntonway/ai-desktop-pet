@@ -1,11 +1,11 @@
 {
   "name": "ai-desktop-pet",
-  "version": "0.1.8",
+  "version": "0.1.12",
   "description": "An AI pet that stays with you while you are working",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
-    "dev": "concurrently -k \"vite\" \"wait-on http://localhost:5173 && electron . --dev\"",
+    "dev": "concurrently -k \"vite\" \"wait-on http://localhost:5174 && electron . --dev\"",
     "build": "vite build",
     "dist": "node scripts/make-icon.js && vite build && cross-env CSC_LINK= electron-builder"
   },
@@ -25,6 +25,10 @@
       {
         "from": ".env",
         "to": ".env"
+      },
+      {
+        "from": "build/icon.png",
+        "to": "icon.png"
       }
     ],
     "win": {
@@ -43,6 +47,11 @@
       "deleteAppDataOnUninstall": true,
       "artifactName": "${productName}.Setup.${version}.exe"
     },
+    "publish": {
+      "provider": "github",
+      "owner": "dvntonway",
+      "repo": "ai-desktop-pet"
+    },
     "protocols": [
       {
         "name": "Petto",
@@ -53,6 +62,7 @@
     ]
   },
   "dependencies": {
+    "electron-updater": "^6.8.3",
     "lottie-react": "^2.4.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
