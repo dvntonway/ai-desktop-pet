@@ -1,6 +1,6 @@
 {
   "name": "ai-desktop-pet",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "An AI pet that stays with you while you are working",
   "private": true,
   "main": "electron/main.js",
