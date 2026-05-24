@@ -367,7 +367,7 @@ function buildMenuTemplate() {
     ]),
     { type: 'separator' },
     {
-      label:   'Keep me quiet',
+      label:   'Shut Up',
       type:    'checkbox',
       checked: shutUpMode,
       click: () => {
