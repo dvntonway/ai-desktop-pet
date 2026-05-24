@@ -75,12 +75,13 @@ const ALL_PETS = [
 ];
 
 // In-memory tier + active-pet state (loaded/refreshed on launch)
-let currentTier   = 'trial'; // 'trial' | 'pro'
-let trialExpired  = false;   // true once the 24 h window closes without upgrade
-let deviceBlocked = false;   // true if device hit the multi-account trial limit (session-only)
-let activePet     = 'cat';
-let shutUpMode    = false;   // when true, skip API and cycle random emotions silently
-let warned50Date  = null;    // tracks which calendar day the 50-remaining warning fired
+let currentTier     = 'trial'; // 'trial' | 'pro'
+let trialExpired    = false;   // true once the 24 h window closes without upgrade
+let deviceBlocked   = false;   // true if device hit the multi-account trial limit (session-only)
+let activePet       = 'cat';
+let shutUpMode      = false;   // when true, skip API and cycle random emotions silently
+let warned50Date    = null;    // tracks which calendar day the 50-remaining warning fired
+let updateDownloaded = false;  // true once electron-updater has a ready-to-install update
 
 // ---------------------------------------------------------------------------
 // File I/O helpers
@@ -567,8 +568,10 @@ ipcMain.on('move-window-by', (_, dx, dy) => {
 // Sends 'update-ready' to the renderer so the pet can show a speech bubble.
 // ---------------------------------------------------------------------------
 function setupAutoUpdater() {
-  autoUpdater.autoDownload        = true;
-  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.autoDownload         = true;
+  // We call quitAndInstall() ourselves in before-quit, so don't let
+  // electron-updater try to do it independently (unreliable on Windows/NSIS).
+  autoUpdater.autoInstallOnAppQuit = false;
 
   autoUpdater.on('checking-for-update', () =>
     console.log('[updater] checking for updates…'));
@@ -577,6 +580,7 @@ function setupAutoUpdater() {
   autoUpdater.on('update-not-available', () =>
     console.log('[updater] already up to date'));
   autoUpdater.on('update-downloaded', info => {
+    updateDownloaded = true;
     console.log(`[updater] v${info.version} downloaded — will install on next quit`);
     if (win && !win.isDestroyed())
       win.webContents.send('update-ready', info.version);
@@ -641,3 +645,14 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {});
+
+// If a downloaded update is waiting, install it silently before the process exits.
+// quitAndInstall() runs the NSIS installer and exits the app; the next launch is
+// the new version. We use before-quit (not autoInstallOnAppQuit) because the
+// built-in hook is unreliable with NSIS one-click installers on Windows.
+app.on('before-quit', () => {
+  if (updateDownloaded) {
+    console.log('[updater] before-quit — running quitAndInstall()');
+    autoUpdater.quitAndInstall(/* isSilent */ true, /* isForceRunAfter */ false);
+  }
+});
